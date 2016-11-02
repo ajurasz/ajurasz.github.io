@@ -1,0 +1,91 @@
+# General Settings
+name: Arek Jurasz
+job_title: Software Engineer
+email: arkadiusz.jurasz@gmail.com
+description: Started as QA Engineer, then moved to build systems for financial sector and now I'm focusing on Big Data and IoT.
+avatar: /assets/avatar.jpeg
+favicon: /favicon.ico
+twitter_handler: arekjurasz
+analytics_code: UA-70225806-1
+disqus: ajurasz
+
+# Social Accounts
+social_networks:
+-  { name: facebook, url: '' }
+-  { name: twitter, url: 'https://twitter.com/arekjurasz' }
+-  { name: instagram, url: '' }
+-  { name: google-plus, url: '' }
+-  { name: linkedin, url: 'https://www.linkedin.com/in/arkadiusz-jurasz' }
+-  { name: skype, url: '' }
+-  { name: github, url: 'https://github.com/ajurasz' }
+-  { name: codepen, url: '' }
+-  { name: stack-overflow, url: '' }
+-  { name: dribbble, url: '' }
+-  { name: behance, url: '' }
+-  { name: pinterest, url: '' }
+-  { name: tumblr, url: '' }
+-  { name: youtube, url: '' }
+-  { name: vimeo, url: '' }
+-  { name: vine, url: '' }
+-  { name: 500px, url: '' }
+-  { name: flickr, url: '' }
+-  { name: spotify, url: '' }
+-  { name: steam, url: '' }
+-  { name: wordpress, url: '' }
+-  { name: xing, url: '' }
+
+# Modules Settings
+show_categories: 0
+show_tags: 1
+show_mood: 0
+show_email: 1
+show_rss: 1
+show_comments: 1
+show_menu: 0
+fixed_sidebar: 1
+
+# Defaults
+defaults:
+  -
+    scope:
+      path: ""
+      type: "posts"
+    values:
+      comments: "true"
+  -
+    scope:
+      path: ""
+      type: my_tags
+    values:
+      layout: tag_index     
+
+# Serving
+url: "https://ajurasz.github.io"
+baseurl: ""
+
+# Includes
+include: ["_pages"]
+
+# Outputting
+permalink: /:year-:month-:day-:title
+category_dir: categories
+
+# Tags
+collections:
+  my_tags:
+    output: true
+    permalink: /tag/:name/  
+
+# Pagination
+paginate: 5
+paginate_path: "/page:num/"
+
+# Conversion
+markdown: kramdown
+
+excerpt_separator:  <!--more-->
+
+# Assets Settings
+sass:
+  sass_dir: assets/partials
+  style: compressed
