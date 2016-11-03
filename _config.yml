@@ -43,7 +43,7 @@ show_rss: 1
 show_comments: 1
 show_menu: 0
 fixed_sidebar: 1
-show_sidebar_in_post: 1
+show_sidebar_in_post: 0
 
 # Defaults
 defaults:
