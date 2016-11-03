@@ -28,10 +28,6 @@
 	}
 }
 
-.wide {
-	width: 100% !important;
-}
-
 .the-content { float: left; width: 68%;
 	& > h1 { text-transform: uppercase; color: $grey-color-light; letter-spacing: 0.1em; font-size: 12px; font-weight: 400; margin: 0 0 20px; text-align: center; }
 	.search { position: relative; margin: 0 0 20px; border: 1px solid $grey-color-lightest; background: $white; box-shadow: 0 2px 3px rgba($black,.05), inset 6px 0 0 $grey-color-lightest; @include placeholder($grey-color-lighter, italic);
@@ -176,6 +172,10 @@
 		.page_number { position: absolute; left: 50%; top: 50%; @include translate(-50%, -50%); font-size: 12px; color: $grey-color-light; }
 	}
 }
+
+.wide { width: 100% !important;
+}
+
 
 .not-found { text-align: center;
 	&.post { padding: 40px; font-size: 16px; }
