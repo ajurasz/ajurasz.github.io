@@ -4,7 +4,9 @@
 
     <body>
         <div class="wrapper clear">
-            {% include sidebar.html %}
+            {% if site.show_wide_post != 1 %}
+                {% include sidebar.html %}
+            {% endif %}
 
             <main class="the-content" role="main">
                 {% include search.html %}
