@@ -4,9 +4,7 @@
 
     <body>
         <div class="wrapper clear">
-            {% if site.show_sidebar_in_post == 1 && (page.show_sidebar == blank || page.show_sidebar == 1) %}
-                {% include sidebar.html %}
-            {% endif %}
+            {% include sidebar.html %}
 
             <main class="the-content" role="main">
                 {% include search.html %}
