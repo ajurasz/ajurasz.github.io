@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    {% include head.html %}
+
+    <body>
+        <div class="wrapper clear">
+            <main class="the-content-wide" role="main">
+                {% include search.html %}
+                {{ content }}
+            </main>
+        </div>
+
+        {% include scripts.html %}
+    </body>
+</html>
