@@ -4,8 +4,7 @@
 
     <body>
         <div class="wrapper clear">
-            {% include {{ page.show_sidebar }} %}
-            {% if site.show_sidebar_in_post == 1 %}
+            {% if page.show_sidebar && page.show_sidebar == 1 %}
                 {% include sidebar.html %}
             {% endif %}
 
