@@ -4,7 +4,8 @@
 
     <body>
         <div class="wrapper clear">
-            {% if site.show_wide_post != 1 %}
+            {{ site.show_sidebar_in_post }}
+            {% if site.show_sidebar_in_post == 1 %}
                 {% include sidebar.html %}
             {% endif %}
 
