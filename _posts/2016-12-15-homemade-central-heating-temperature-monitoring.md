@@ -3,6 +3,7 @@ layout: post
 date: 2016-12-15 12:00
 title: "Homemade central heating temperature monitoring"
 description: Complete solution for remote temperature monitoring.
+image: esp8266_remote_demperature_diagram.png
 tags: [iot, nodejs, arduino, android, esp8266]
 ---
 
