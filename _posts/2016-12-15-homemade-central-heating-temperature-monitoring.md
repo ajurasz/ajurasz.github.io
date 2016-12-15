@@ -16,7 +16,7 @@ Solution to my issue would be replacing the old furnace with new one that can au
 My idea is to use [ESP8266](https://en.wikipedia.org/wiki/ESP8266) that will send temperature readings to [MQTT broker](https://www.cloudmqtt.com/) running in the cloud
 and then business logic will be handled by lightweight nodejs application running on [Heroku](https://dashboard.heroku.com/). Logic is simple, display the current temperature in real time one web page using WebSocket protocol, expose REST endpoint with current temperature and send a notification to registered Android devices when the temperature is over 80 Celcius degrees. Registered devices will be stored in MongoDB hosted by [mLab](https://mlab.com/). Here is top level architecture diagram:
 
-![Posts per blog]({{ site.url }}/img/posts/esp8266_remote_demperature_diagram.png)
+<img src="{{ site.url }}/img/posts/esp8266_remote_demperature_diagram.png" width="100%">
 
 ## Costs
 
