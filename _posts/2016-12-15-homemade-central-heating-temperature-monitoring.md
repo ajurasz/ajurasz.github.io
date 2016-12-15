@@ -9,12 +9,14 @@ tags: [iot, nodejs, arduino, android, esp8266]
 Over the weekend I decided to once and for all resolve issue with boiling water in our central heating system. For people who don't know what I'm writing about here, you will find nice [ilustration](https://www.plumber24hours.co.uk/plumber-blog/index.php/2013/01/05/solid-fuel/) that should make it clear. In my case the problem is that when I focus on something I forgot about the world around me and then after some time the sound of boiling water in pipes immediately pulls me out of my work and in few seconds I'm in the basement trying to resolve issue in different ways and this isn't a pleasant operation. Please notice that this situation is very dangerous because boiling water can damage pipes and in few minutes your home can be flooded and repair costs probably will be very high.
 Solution to my issue would be replacing the old furnace with new one that can automatically take care of temperature adjustments, but I have got much more cheaper and more interensting solution for this one. 
 
+<!--more-->
+
 ## Idea
 
 My idea is to use [ESP8266](https://en.wikipedia.org/wiki/ESP8266) that will send temperature readings to [MQTT broker](https://www.cloudmqtt.com/) running in the cloud
 and then business logic will be handled by lightweight nodejs application running on [Heroku](https://dashboard.heroku.com/). Logic is simple, display the current temperature in real time one web page using WebSocket protocol, expose REST endpoint with current temperature and send a notification to registered Android devices when the temperature is over 80 Celcius degrees. Registered devices will be stored in MongoDB hosted by [mLab](https://mlab.com/). Here is top level architecture diagram:
 
-![Posts per blog]({{ site.url }}/img/posts/esp8266_remote_demperature_diagram.png)]
+![Posts per blog]({{ site.url }}/img/posts/esp8266_remote_demperature_diagram.png)
 
 ## Costs
 
@@ -42,11 +44,11 @@ Regarding [Eclipse IoT White Paper](https://iot.eclipse.org/resources/white-pape
 
 If it comes to ESP8266 there are two main things that you need to know when playing with this device. There are different wirings for deploying and running your program. When you want to deploy your program to the device you need to set up wirings in following way:
 
-![image]({{ site.url }}/img/posts/ESP8266_upload.png)]
+![image]({{ site.url }}/img/posts/ESP8266_upload.png)
 
 when you want to run your program, wirings should be set up in the following way (scheme contains temperature sensor connected to ESP8266):
 
-![image]({{ site.url }}/img/posts/ESP8266_run.png)]
+![image]({{ site.url }}/img/posts/ESP8266_run.png)
 
 Main responsibilities of ESP8226 device are:
 
@@ -257,11 +259,11 @@ Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging/) and
 
 1) widget
 
-![image]({{ site.url }}/img/posts/android_widget.png)]
+![image]({{ site.url }}/img/posts/android_widget.png)
 
 2) notification
 
-![image]({{ site.url }}/img/posts/android_notification.png)]
+![image]({{ site.url }}/img/posts/android_notification.png)
 
 Integration with FCM was kind of tricky but ["Set Up a Firebase Cloud Messaging Client App on Android"](https://firebase.google.com/docs/cloud-messaging/android/client) article helped me a lot. It will take you step by step how to set up FCM client.
 
