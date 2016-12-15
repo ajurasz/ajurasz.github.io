@@ -10,7 +10,11 @@
     <meta name="description" content="{% if page.description %}{{ page.description | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}">
     <meta name="description" property="og:description" content="{% if page.description %}{{ page.description | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}" />
     <meta name="twitter:description" content="{% if page.description %}{{ page.description | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}" />
-
+    {% if page.image %}
+    <meta name="twitter:image:src" content="{{ site.url }}/img/posts/{{ page.image }}">
+    <meta name="twitter:image:width" content="280">
+    <meta name="twitter:image:height" content="150">
+    {% endif %}
     <meta name="twitter:card" content="summary_large_image" />
     {% if site.twitter_handler %}
     <meta name="twitter:site" content="@{{site.twitter_handler}}" />
@@ -18,7 +22,6 @@
     <meta property="og:url" content="{{page.url | prepend: site.baseurl | prepend: site.url}}" />
 
     <meta property="og:image" content="" />
-    <meta name="twitter:image" content="" />
 
     <meta name="author" content="{{site.name}}" />
 
