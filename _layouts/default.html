@@ -4,10 +4,13 @@
 
     <body>
         <div class="wrapper clear">
+            {% if layout.show_sidebar == null || layout.show_sidebar == 1 %}
             {% include sidebar.html %}
-
-            <main class="the-content" role="main">
+            {% endif %}            
+            <main class="the-content" role="main" style="{%if page.layout == 'post' %}width: 100%{% endif %}">
+                {% if layout.show_sidebar == null || layout.show_sidebar == 1 %}
                 {% include search.html %}
+                {% endif %}                                 
                 {{ content }}
             </main>
         </div>
