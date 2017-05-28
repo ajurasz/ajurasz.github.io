@@ -2,7 +2,7 @@
 layout: post
 date: 2017-05-28 12:00
 title: "Kotlin + AWS Lambda + Serverless Framework"
-description: Example project written in Kotlin and ran on AWS as Lambda functions.
+description: Experimenting with Kotlin, AWS Lambda and Serverless Framework.
 image: kotlin_lambda_serverless_logos.jpg
 tags: [kotlin, aws_lambda, serverless]
 ---
