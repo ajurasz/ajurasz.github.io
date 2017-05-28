@@ -32,7 +32,7 @@ social_networks:
 -  { name: spotify, url: '' }
 -  { name: steam, url: '' }
 -  { name: wordpress, url: '' }
--  { name: xing, url: 'https://www.xing.com/profile/Arkadiusz_Jurasz' }
+-  { name: xing, url: '' }
 
 # Modules Settings
 show_categories: 0
