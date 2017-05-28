@@ -76,7 +76,7 @@
 
 		.post-content { font-size: 16px; line-height: 26px;
 			abbr { border-bottom: 1px dotted $grey-color-normal; cursor: help; }
-			code, kbd, pre { margin: 0; font-family: monospace; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; }
+			code, kbd, pre { margin: 0; font-family: monospace; word-wrap: break-word; word-break: break-word; white-space: pre-wrap; color: #C25;}
 			address, cite, var { font-style: italic; }
 			blockquote { margin: 40px 0; padding-left: 30px; font-style: italic; border-left: 3px solid $grey-color-light; }
 
@@ -93,26 +93,26 @@
 			a { color: $primary-color; border-bottom: 1px solid $primary-color;
 				&:hover { border: none; }
 			}
-			
+
 			img { width: 300px; margin: auto;}
 
 			ul, ol { margin: 15px 0;
 				li { margin: 5px 0;
-					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; }
+					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
 				}
 			}
 
 			dl { margin: 40px 0;
 				dt { margin: 10px 0 0; font-size: 18px; font-weight: 700; }
 				dd { margin: 5px 0;
-					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; }
+					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
 				}
 			}
 
 			ul { list-style-type: disc; list-style-position: inside; }
 
 			p { margin: 15px 0; line-height: 27px;
-				& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; }
+				& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
 			}
 
 			.alignleft { float: left; margin: 20px 30px 20px 0; }

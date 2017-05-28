@@ -3,12 +3,14 @@ layout: post
 date: 2017-05-28 12:00
 title: "Kotlin + AWS Lambda + Serverless Framework"
 description: Example project written in Kotlin and ran on AWS as Lambda functions.
-image:
+image: kotlin_lambda_serverless_logos.jpg
 tags: [kotlin, aws_lambda, serverless]
 ---
 
 Some time ago I came across the following tweet.
-<img src="{{ site.url }}/img/posts/tweet_aws_kotlin.jpg" style="width: 100%;">
+
+<img src="{{ site.url }}/img/posts/tweet_aws_kotlin.jpg" style="width: 75%;">
+
 There were two things that took my attention - kotlin and Rekognition.
 
 <!--more-->
@@ -21,20 +23,22 @@ as we will see soon this API is very easy to use.
 
 ## Why
 
-At this point for me, it was the first contact with pretty nice and interesting example of AWS Lambda usage created by [Vladimir Budilov](https://twitter.com/VladimirBudilov) and available on [github](https://github.com/awslabs/serverless-photo-recognition). For these who are not familiar with AWS Lambda term -  it is a new category of cloud computing services called FaaS (function as a service). It stands next to IaaS (infrastructure as a service), PaaS (platform as a service) and SaaS (software as a service) it is also referred as Serverless architecture. In short, you focus only on your business logic and don't care about provisioning and managing servers.
-<img src="{{ site.url }}/img/posts/faas_diagram.jpg" style="width: 100%;">
+At this point for me, it was the first contact with pretty nice and interesting example of AWS Lambda usage created by [Vladimir Budilov](https://twitter.com/VladimirBudilov) (here is a  [github](https://github.com/awslabs/serverless-photo-recognition) repository). For these who are not familiar with AWS Lambda term -  it is a new category of cloud computing services called FaaS (function as a service). It stands next to IaaS (infrastructure as a service), PaaS (platform as a service) and SaaS (software as a service) it is also referred as Serverless architecture. In short, you focus only on your business logic and don't care about provisioning and managing servers.
+
+<img src="{{ site.url }}/img/posts/faas_diagram.jpg" style="width: 75%;">
 <sub>Source: Deploy microservice using Amazon Web Services S3, API Gateway, Lambda and Couchbase by Arun Gupta (https://www.youtube.com/watch?v=eT4EaU2mfL0)</sub>
-After analysing [serverless-photo-recognition](https://github.com/awslabs/serverless-photo-recognition) repository I felt urgent need to write something of my own. One thing that I considered not to be very concise was a setup step. The author created setup [script](https://github.com/awslabs/serverless-photo-recognition/blob/master/setup/setupEnvironment.sh) which is very verbose. So let's start by making this process a lot more easier (to make and understand).
+
+After analysing [serverless-photo-recognition](https://github.com/awslabs/serverless-photo-recognition) repository I felt urgent need to write something of my own. One thing that I considered not to be very concise was a setup step. The author created setup [script](https://github.com/awslabs/serverless-photo-recognition/blob/master/setup/setupEnvironment.sh) which is very verbose. So let's start by making this process a lot more easier (to make and understand - for people not so familiar with AWS platform).
 
 ## Serverless framework
 
-[Serverless framework](https://serverless.com/) is a cli tool that creates great abstraction over [AWS CloudFormation](https://aws.amazon.com/cloudformation/) and automates the whole process of setting up cloud infrastructure required by our functions. We start by installing serverless
+[Serverless framework](https://serverless.com/) is a cli tool that creates great abstraction over [AWS CloudFormation](https://aws.amazon.com/cloudformation/) and automates the whole process of setting up cloud infrastructure required by our functions. We start by installing `serverless framework`
 
 ```shell
 npm install -g serverless
 ```
 
-then a good idea is to create dedicated AWS user that will be used one behalf of serverless framework. Exact instruction of how to accomplish this can be found [here](https://serverless.com/framework/docs/providers/aws/guide/credentials/). In my case, this user hides behind `sless` AWS cli profile name - [see here](https://github.com/ajurasz/ascii-less-gallery/blob/58ad818d1d0d7131b4cb5ad9e027cea815197656/serverless.yml#L6). All configuration is placed in one file `serverless.yml`
+then a good idea is to create dedicated AWS user that will be used on behalf of `serverless framework`. Exact instruction of how to accomplish this can be found [here](https://serverless.com/framework/docs/providers/aws/guide/credentials/). In my case, this user hides behind `sless` AWS cli profile name - [see here](https://github.com/ajurasz/ascii-less-gallery/blob/58ad818d1d0d7131b4cb5ad9e027cea815197656/serverless.yml#L6). All configuration is placed in one file `serverless.yml`
 where we first define `provider`
 
 ```shell
@@ -80,7 +84,7 @@ I wrote a simple CRD (no update) functions with custom authentication mechanism 
 
 <img src="{{ site.url }}/img/posts/architecture_aws_lambda.png" style="width: 100%;">
 
-I believe that above diagram is self-explanatory so let's dive into one of the functions. [CreateHandler](https://github.com/ajurasz/ascii-less-gallery/blob/master/src/main/kotlin/ajurasz/lambda/gallery/CreateHandler.kt), the entry point is `handleRequest` function triggered by AWS when an HTTP POST request reaches API Gateway at /gallery path.
+I believe that above diagram is self-explanatory so let's dive into one of the functions. [CreateHandler](https://github.com/ajurasz/ascii-less-gallery/blob/master/src/main/kotlin/ajurasz/lambda/gallery/CreateHandler.kt), the entry point is `handleRequest` function triggered by AWS when an HTTP POST request reaches API Gateway at `/gallery` path.
 
 ```shell
     override fun handleRequest(input: Request, context: Context): String {
@@ -137,7 +141,7 @@ When using serverless framework we need to create a configuration for each funct
             identitySource: method.request.header.token
 ```
 
-we see that this function is triggered by HTTP specific event - POST request to `/gallery` path. This configuration is little bit more complicated than for other functions and this is because we are not using default `lambda-proxy` integration (integration between API Gateway and Lambda) as we need to customize it to handle binary data. More information about handling binary data in AWS Lambda can be found [here](https://aws.amazon.com/blogs/compute/binary-support-for-api-integrations-with-amazon-api-gateway/). We also secured our function with `auth` function that will be invoked before target function to check if supplied token is valid. We are also able to cache response of `auth` function where cache key is a `identitySource`. Usually when using proxy approach the whole request is forwarded to our function and configuration is as easy as
+we see that this function is triggered by HTTP specific event - POST request to `/gallery` path. This configuration is little bit more complicated than for other functions and this is because we are not using default `lambda-proxy` integration (integration between API Gateway and Lambda) as we need to customize it to handle binary data. More information about handling binary data in AWS Lambda can be found [here](https://aws.amazon.com/blogs/compute/binary-support-for-api-integrations-with-amazon-api-gateway/). We also secured our function with `auth` function that will be invoked before target function to check if supplied token is valid. `auth` function response is cached for 30 sec, the cache key is a `identitySource`. Usually when using proxy approach the whole request is forwarded to our function and configuration is as easy as
 
 ```shell
   list:
@@ -167,7 +171,7 @@ when we want to secure our endpoint.
 
 ## Testing
 
-With good encapsulation, you can test a lot. In my case, I only was not able to test Rekognition and DynamoDB services so had to use mocks. Recently (again, thank you Twitter) I found that [allegro tech tema](https://github.com/allegro) open sourced [embedded ElasticSearch](https://github.com/allegro/embedded-elasticsearch) to make unit and integration testing easier and more reliable.
+With good encapsulation, you can test a lot. In my case, I only was not able to test Rekognition and DynamoDB services so had to use mocks. Recently (again, thank you Twitter) I found that [allegro tech team](https://github.com/allegro) open sourced [embedded-elasticsearch](https://github.com/allegro/embedded-elasticsearch) to make unit and integration testing easier and more reliable.
 
 ## Deployment
 This can obviously be a part of CI/CD pipeline as when everything is ready you need to execute just two commands
@@ -180,4 +184,4 @@ serverless deploy
 this could be simplified to just one command by executing `serverless` command from within gradle task.
 
 ## Conclusion
-Personally, I wouldn't consider building my whole application as functions from one simple reason - vendor locking ([this article](https://startupsventurecapital.com/firebase-costs-increased-by-7-000-81dc0a27271d) is kind of "lessons learned" type in terms of vendor locking). But this is a great option when you need to run some simple function triggered by different events somewhere on the web. There is still some lack in case of debugging (or I didn't yet discover how to make it properly) these functions - at this point I will say only: logger is your friend.
+Personally, I wouldn't consider building my whole application as functions from one simple reason - vendor locking ([this article](https://startupsventurecapital.com/firebase-costs-increased-by-7-000-81dc0a27271d) is kind of "lessons learned" type in terms of vendor locking). But this is a great option when you need to run some simple function triggered by different events somewhere on the web. There is still some lack in case of debugging (or I didn't yet discover how to do it properly) these functions - at this point I will say only - *logger is your friend*.
