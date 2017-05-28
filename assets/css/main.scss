@@ -98,21 +98,21 @@
 
 			ul, ol { margin: 15px 0;
 				li { margin: 5px 0;
-					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
+					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest;}
 				}
 			}
 
 			dl { margin: 40px 0;
 				dt { margin: 10px 0 0; font-size: 18px; font-weight: 700; }
 				dd { margin: 5px 0;
-					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
+					& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest;}
 				}
 			}
 
 			ul { list-style-type: disc; list-style-position: inside; }
 
 			p { margin: 15px 0; line-height: 27px;
-				& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest; color: #C25;}
+				& > code { font-size: 14px; padding: 3px 6px; background: $background-color; border: 1px solid $grey-color-lightest;}
 			}
 
 			.alignleft { float: left; margin: 20px 30px 20px 0; }
