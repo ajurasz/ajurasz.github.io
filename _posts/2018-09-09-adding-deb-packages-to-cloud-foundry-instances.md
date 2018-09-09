@@ -17,8 +17,8 @@ Before moving forward let's introduce some useful buildpacks that we will be usi
 We will be using:
 
 1) [apt-buildpack](https://github.com/cloudfoundry/apt-buildpack) - allow us to list all deb packages we want to install in `apt.yml` file. It's supporting custom apt repositories as well.  
-2) [binary-buildpack](https://github.com/cloudfoundry/binary-buildpack) - this buildpack allow you to run binary web services that do not require any runtime dependencies (any of these sould be statically linked to your binary). Good buildpack just for preparing "clean" instance.
-3) [multi-buildpack](https://github.com/cloudfoundry/multi-buildpack) - as names suggests for running multiple buildpacks.
+2) [binary-buildpack](https://github.com/cloudfoundry/binary-buildpack) - this buildpack allow you to run binary web services that do not require any runtime dependencies (any of these sould be statically linked to your binary). Good buildpack just for preparing "clean" instance.  
+3) [multi-buildpack](https://github.com/cloudfoundry/multi-buildpack) - as names suggests for running multiple buildpacks.  
 
 
 ### Using multi-buildpack
@@ -128,9 +128,8 @@ cf push --no-start (1)
 cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpack (2)
 ```
 
-(1) sets up instance and do not start it
-
-(2) we need to specify the app name we want to update. In this case, we just update the buildpack section of deployed manifest. We can also use public and builtin buildpacks.
+(1) sets up instance and do not start it  
+(2) we need to specify the app name we want to update. In this case, we just update the buildpack section of deployed manifest. We can also use public and builtin buildpacks  
 
 Directory structure:
 
