@@ -83,6 +83,8 @@ paginate_path: "/page:num/"
 
 # Conversion
 markdown: kramdown
+  input: GFM
+  syntax_highlighter: rouge
 
 excerpt_separator:  <!--more-->
 
