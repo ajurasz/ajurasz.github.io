@@ -16,18 +16,18 @@ Do you want to know what bluetooth devices are in the range of your raspberry Pi
 
 Following example demonstrate how easy it is to expose REST endpoint which will trigger bluetooth scanner. This code can be run on both pc and raspberry pi:
 
-```java
+{% highlight java %}
 restConfiguration().component("netty4-http").host("0.0.0.0").port(8081).bindingMode(RestBindingMode.json);
 rest("/api/devices").get().route().to("bluetooth://scan?serviceDiscovery=true");
-```
+{% endhighlight %}
 
 In above snipped we are doing two things, configuring [netty4 component](http://camel.apache.org/netty4.html) by setting host, port and binding mode. With binding mode set to `json` there is automatic conversion of `json` content to and from POJOs for all incoming and outgoing messages. Then `GET` endpoint was created with the `/api/devices` URI.
 
 Run application:
 
-```shell
+{% highlight shell %}
 java -jar target/scanner-pc-1.0-SNAPSHOT.jar
-```
+{% endhighlight %}
 
 then
 
@@ -158,13 +158,13 @@ Source code can be found [here](https://github.com/ajurasz/blog-samples).
 
 To build all modules you just need to execute from project directory
 
-```shell
+{% highlight shell %}
 ./mvnw clean install
-```
+{% endhighlight %}
 
 notice that I'm writing maven pom in groovy so if you want you can convert `pom.groovy` to `pom.xml` with following command
 
-```shell
+{% highlight shell %}
 ./mvnw io.takari.polyglot:polyglot-translate-plugin:translate
-```
+{% endhighlight %}
 
