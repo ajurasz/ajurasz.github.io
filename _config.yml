@@ -90,3 +90,5 @@ excerpt_separator:  <!--more-->
 sass:
   sass_dir: assets/partials
   style: compressed
+
+plugins: ['jekyll-paginate', 'jekyll-gist']
