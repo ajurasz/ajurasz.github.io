@@ -31,13 +31,13 @@ java -jar target/scanner-pc-1.0-SNAPSHOT.jar
 
 then
 
-```shell
+{% highlight shell %}
 curl http://localhost:8081/api/devices
-```
+{% endhighlight %}
 
 and formatted response should look like this:
 
-```json
+{% highlight json %}
 [
   {
     "name": "arek",
@@ -78,7 +78,7 @@ and formatted response should look like this:
     ]
   }
 ]
-```
+{% endhighlight %}
 
 ## Bluetooth scanner on Raspberry Pi
 
@@ -105,7 +105,7 @@ To assemble this schematic you will require:
 
 And here is the code to run on Raspberry Pi:
 
-```java
+{% highlight java %}
 private static class ScannerRoute extends RouteBuilder {
 
     @Override
@@ -137,7 +137,7 @@ private static class ScannerRoute extends RouteBuilder {
         }
     }
 }
-```
+{% endhighlight %}
 
 With this route few [EIP](http://camel.apache.org/eip.html) were used but I won't explain them here as it's out of the scope of this post. The flow is following:
 
