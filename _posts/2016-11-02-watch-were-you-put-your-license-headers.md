@@ -8,9 +8,9 @@ tags: [docker]
 
 Recently when I was playing with creating [Docker](https://www.docker.com/) images I came across really strange error during creation of a container that doesn't say much (not to me):
 
-```shell
+{% highlight shell %}
 standard_init_linux.go:175: exec user process caused "exec format error"
-```
+{% endhighlight %}
 
 <!--more-->
 
@@ -18,7 +18,7 @@ after some time spent on searching information about it, I started to rollback a
 
 From Unix perspective this script is valid (in terms that it executes and print's expected value on the screen):
 
-```shell
+{% highlight shell %}
  cat test.sh
 #The MIT License (MIT)
 #Copyright (c) 2016 Arek Jurasz
@@ -34,13 +34,13 @@ From Unix perspective this script is valid (in terms that it executes and print'
 ps h -p $$ -o args='' | cut -f1 -d' ' (2)
 
 echo "Success"
-```
+{% endhighlight %}
 
 > (1) inform OS what interpreter should be used for this script
 
 > (2) finds what interpreter is used to execute script
 
-```shell
+{% highlight shell %}
 
  ls -l
 total 8
@@ -50,24 +50,23 @@ total 8
  ./test.sh
 /bin/sh
 Success
-```
+{% endhighlight %}
 
 if we change (1) to `#!/bin/bash` the output is still the same:
 
-
-```shell
+{% highlight shell %}
  ./test.sh
 /bin/sh
 Success
-```
+{% endhighlight %}
 
 but we were expecting:
 
-```shell
+{% highlight shell %}
  ./test.sh
 /bin/bash
 Success
-```
+{% endhighlight %}
 
 this is not happening because [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) is not in the first line and my OS is using default interpreter.
 
