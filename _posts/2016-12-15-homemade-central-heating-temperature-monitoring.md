@@ -55,7 +55,7 @@ Main responsibilities of ESP8226 device are:
 
 1) establish and keep a connection to local network (to gain access to the internet) 
 
-```c
+{% highlight c %}
 #include <ESP8266WiFi.h>
 
 #define wifi_ssid "<your ssid>"
@@ -75,11 +75,11 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 }
-```
+{% endhighlight %}
 
 2) read data from the temperature sensor
 
-```c
+{% highlight c %}
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
@@ -94,11 +94,11 @@ void setup() {
   float tempC = sensors.getTempCByIndex(0);
 
 }
-```
+{% endhighlight %}
 
 3) push readings to MQTT broker
 
-```c
+{% highlight c %}
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
@@ -146,7 +146,7 @@ void loop() {
   delay(30000);
 
 }
-```
+{% endhighlight %}
 
 You can run above snippets independently or combine them together. At this point I need to say that it was so easy only thanks to these great libraries (as I have basically no experience in C language):
 
@@ -165,7 +165,7 @@ Main responsibilities of the Nodejs application:
 
 1) expose REST endpoints to handle device registration, update and delete:
 
-```javascript
+{% highlight javascript %}
 
 app.post('/device', function(req, res) {
     var deviceName = req.body.deviceName;
@@ -220,13 +220,13 @@ app.delete('/device/:deviceId', function(req, res) {
     });
 });
 
-```
+{% endhighlight %}
 
 2) expose WebSocket endpoint using [express-ws](https://www.npmjs.com/package/express-ws)
 
 3) subscribe to MQTT topic and update `lastTemp` object with current temperature and notify registered devices if the temperature is above 80 degrees:
 
-```javascript
+{% highlight javascript %}
 
 mqttClient.on('message', (topic, message) => {
     console.log('received message %s %s', topic, message)
@@ -249,7 +249,7 @@ mqttClient.on('message', (topic, message) => {
     }
 })
 
-```
+{% endhighlight %}
 
 above was accomplished with [MQTT](https://www.npmjs.com/package/mqtt) and [FCM](https://www.npmjs.com/package/fcm) libraries. Documentation is very good even for Noob as I'm (in the case of Node.js) so no more explanation is required.
 
