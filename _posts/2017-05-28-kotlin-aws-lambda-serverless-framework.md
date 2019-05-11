@@ -34,14 +34,14 @@ After analysing [serverless-photo-recognition](https://github.com/awslabs/server
 
 [Serverless framework](https://serverless.com/) is a cli tool that creates great abstraction over [AWS CloudFormation](https://aws.amazon.com/cloudformation/) and automates the whole process of setting up cloud infrastructure required by our functions. We start by installing `serverless framework`
 
-```shell
+{% highlight shell %}
 npm install -g serverless
-```
+{% endhighlight %}
 
 then a good idea is to create dedicated AWS user that will be used on behalf of `serverless framework`. Exact instruction of how to accomplish this can be found [here](https://serverless.com/framework/docs/providers/aws/guide/credentials/). In my case, this user hides behind `sless` AWS cli profile name - [see here](https://github.com/ajurasz/ascii-less-gallery/blob/58ad818d1d0d7131b4cb5ad9e027cea815197656/serverless.yml#L6). All configuration is placed in one file `serverless.yml`
 where we first define `provider`
 
-```shell
+{% highlight shell %}
 provider:
   name: aws
   runtime: java8
@@ -74,7 +74,7 @@ provider:
         - "dynamodb:GetItem"
         - "dynamodb:PutItem"
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_USER_TABLE}"
-```
+{% endhighlight %}
 
 this is a place where we can configure mentioned AWS cli profile, runtime environment, extend the limit of our functions execution time to 60 sec, define environment variables that will be accessible from within our functions and also we can define a security policy for a lambda role created automatically by `serverless`. From above snippet, we see that security statements were defined for lambda, elasticsearch, rekognition and dynamodb services, specifying what action we can execute on them.
 
@@ -86,7 +86,7 @@ I wrote a simple CRD (no update) functions with custom authentication mechanism 
 
 I believe that above diagram is self-explanatory so let's dive into one of the functions. [CreateHandler](https://github.com/ajurasz/ascii-less-gallery/blob/master/src/main/kotlin/ajurasz/lambda/gallery/CreateHandler.kt), the entry point is `handleRequest` function triggered by AWS when an HTTP POST request reaches API Gateway at `/gallery` path.
 
-```shell
+{% highlight shell %}
     override fun handleRequest(input: Request, context: Context): String {
         LOG.debug("input(\n$input\n)")
 
@@ -104,11 +104,11 @@ I believe that above diagram is self-explanatory so let's dive into one of the f
             else -> return response(500, "Failed to save image")
         }
     }
-```
+{% endhighlight %}
 
 In this function, we validate incoming request to check if base64 encoded image string exists and is not blank. Then encoded image is converted to `byte` array and passed to Rekognition service. This service is a wrapper around AWS Rekognition service to simplify interaction with it.
 
-```shell
+{% highlight shell %}
     fun imageLabels(image: ByteArray): List<String> {
         LOG.info("Recognize image labels")
         val response = amazonRekognition.detectLabels(DetectLabelsRequest()
@@ -118,12 +118,12 @@ In this function, we validate incoming request to check if base64 encoded image 
 
         return response?.labels?.map { it.name }.orEmpty()
     }
-```
+{% endhighlight %}
 
 As mentioned at the beginning, using AWS Rekognition service we were able to define a sophisticated deep learning-based operation of labelling objects present on a given image just in few lines of code.
 When using serverless framework we need to create a configuration for each function. Configuration for `CreateHandler` function is following
 
-```shell
+{% highlight shell %}
   create:
     handler: ajurasz.lambda.gallery.CreateHandler
     events:
@@ -139,22 +139,22 @@ When using serverless framework we need to create a configuration for each funct
             name: auth
             resultTtlInSeconds: 30
             identitySource: method.request.header.token
-```
+{% endhighlight %}
 
 we see that this function is triggered by HTTP specific event - POST request to `/gallery` path. This configuration is little bit more complicated than for other functions and this is because we are not using default `lambda-proxy` integration (integration between API Gateway and Lambda) as we need to customize it to handle binary data. More information about handling binary data in AWS Lambda can be found [here](https://aws.amazon.com/blogs/compute/binary-support-for-api-integrations-with-amazon-api-gateway/). We also secured our function with `auth` function that will be invoked before target function to check if supplied token is valid. `auth` function response is cached for 30 sec, the cache key is a `identitySource`. Usually when using proxy approach the whole request is forwarded to our function and configuration is as easy as
 
-```shell
+{% highlight shell %}
   list:
     handler: ajurasz.lambda.gallery.ListHandler
     events:
       - http:
           path: gallery
           method: get
-```
+{% endhighlight %}
 
 or
 
-```shell
+{% highlight shell %}
   delete:
     handler: ajurasz.lambda.gallery.DeleteHandler
     events:
@@ -165,7 +165,7 @@ or
             name: auth
             resultTtlInSeconds: 30
             identitySource: method.request.header.token
-```
+{% endhighlight %}
 
 when we want to secure our endpoint.
 
@@ -176,10 +176,10 @@ With good encapsulation, you can test a lot. In my case, I only was not able to 
 ## Deployment
 This can obviously be a part of CI/CD pipeline as when everything is ready you need to execute just two commands
 
-```shell
+{% highlight shell %}
 ./gradlew test
 serverless deploy
-```
+{% endhighlight %}
 
 this could be simplified to just one command by executing `serverless` command from within gradle task.
 
