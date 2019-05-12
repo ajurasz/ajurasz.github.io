@@ -19,6 +19,7 @@ Recently I was investigating a strange issue that was present only in a producti
 Before moving forward with the analyze let's give some context so that what I will write next will have more sense. As always it starts with a **simple** task in Jira backlog. The task was to move complex **authorization** mechanism from service to web layer. 
 
 > authorization is the process of verifying that "you are permitted to do what you are trying to do"
+
 > source: Wikipedia
 
 The difference on performing **authorization** on these two layers is that services operate on actual objects where web controllers on identifiers of these objects. Below is pseudo code for the change that was planed.
@@ -107,7 +108,7 @@ class LoggingAspect {
 
 You can run tests or application itself (`mvn spring-boot:run`) and call `hello` methods - everything will work as expected. Please notice, if you will place `breakpoint` in `PointcutedHelloController#hello` you will see that `PointcutedHelloController` is wrapped with `com.example.demo.PointcutedHelloController$$EnhancerBySpringCGLIB` proxy.
 
-#### Negatize scenario
+#### Negative scenario
 
 First you will have to change profile setting `activeByDefault` from `false` to `true` in `pom.xml` so it looks like this:
 
@@ -170,7 +171,7 @@ After debugging session I was able to nail down which `classloader` is used when
 
 `Spring AOP` creates its proxies through `CglibAopProxy#getProxy(classLoader)`. This `ClassLoader` object in the end is provided by `DefaultResourceLoader` which sets `classLoader` to `Thread.currentThread().getContextClassLoader()` during object construction. Bellow is screenshot which shows how `classLoader` provided by `DefaultResourceLoader` (left) differs from `classLoader` awaible in any other place of my application when calling `getClass().getClassLoader()`
 
-![classloaders-screenshot]({{ site.url }}/img/posts/wlp-classloaders.png)]
+<img src="{{ site.url }}/img/posts/wlp-classloaders.png" alt="classloaders-screenshot" style="width: auto;">
 
 It looks like the one created by `DefaultResourceLoader` is not aware of my classes so that's the reason why application crashes on startup.
 
