@@ -3,7 +3,7 @@ layout: post
 date: 2019-06-02 12:00
 title: "Verify your JSON"
 description: Some examples of verifying JSON in tests
-tags: [JsonPath, Testing]
+tags: [jsonpath, testing]
 ---
 
 When you hear API and web client together you think `REST`, at least I do. This is because it is still one of the most popular architectural paradigms for building APIs. Another approach about which I hear from time to time is `GraphQL`. There is one common part for these two - they talk JSON. Both specifications `REST` and `GraphQL` does not restrict only to this format but due to its simplicity, it is a very common choice. Every healthy software contains tests on different layers, from unit up to the end-to-end tests. So, how could we verify responses from our APIs?

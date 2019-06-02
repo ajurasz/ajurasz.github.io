@@ -3,7 +3,7 @@ layout: post
 date: 2019-05-12 12:00
 title: "IBM WebSphere Liberty and Spring AOP"
 description: Issue investigation walkthrough
-tags: [WebSphere, Spring, AOP]
+tags: [websphere, spring, aop]
 ---
 
 Investigation walkthrough for an issue related to multiple `classloaders` available when `SpringBoot` application is deployed on `IBM WebSphere Liberty` (`WSL`).
