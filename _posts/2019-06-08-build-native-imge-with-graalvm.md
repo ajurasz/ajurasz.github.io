@@ -2,6 +2,7 @@
 layout: post
 date: 2019-06-08 12:00
 title: "Build a native image with GraalVM"
+description: Build a native image with GraalVM.
 tags: [java]
 ---
 
