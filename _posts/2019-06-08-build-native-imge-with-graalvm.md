@@ -1,31 +1,31 @@
 ---
 layout: post
 date: 2019-06-08 12:00
-title: "Build native image with GraalVM"
+title: "Build a native image with GraalVM"
 tags: [java]
 ---
 
-Last month first production ready version of `GraalVM` with number `19.0` was released. `GraalVM` is a virtual machine capable to run application written in `JavaScript`, `Python`, `Ruby`, `R`, LLVM-based languages like `C`, `C++` and of course our beloved JVM-based languages like `Java`, `Scala`, `Kotlin`, `Groovy` and `Clojure`. Some of the main goals for this new virtual machine are:
- - improve performance of applications build with JVM-based languages
+Last month first production-ready version of `GraalVM` with number `19.0` was released. `GraalVM` is a virtual machine capable to run application written in `JavaScript`, `Python`, `Ruby`, `R`, LLVM-based languages like `C`, `C++` and of course our beloved JVM-based languages like `Java`, `Scala`, `Kotlin`, `Groovy` and `Clojure`. Some of the main goals for this new virtual machine are:
+ - improve the performance of applications build with JVM-based languages
  - reduce startup time by usage of AOT (ahead-of-time) compilation
  - write polyglot applications
  - compile JVM-based code to a standalone executable a.k.a. native image.
 
 <!--more-->
 
-With this post I would like to focus on the last goal and build a native image. Assumption is very simple, take [JsonPath](https://github.com/json-path/JsonPath) library, write some `Java` code to interact with this library and then from terminal quicly test any [JsonPath](https://github.com/json-path/JsonPath) expression you can think of, like
+With this post, I would like to focus on the last goal and build a native image. The assumption is very simple, take [JsonPath](https://github.com/json-path/JsonPath) library, write some `Java` code to interact with this library and then from terminal quickly test any [JsonPath](https://github.com/json-path/JsonPath) expression you can think of, like
 
-{% highlight %}
+{% highlight shell %}
 curl -s https://api.github.com/users/ajurasz | json_path "$.created_at"
 {% highlight %}
 
 ## Native image?
 
-As already mentioned one of the main goal of `GraalVM` is posibility to produce native images which are executables that does not require JRE (java runtime environment) to be present on the system. At first when I heard about this feature I thought that the code instead to be compiled to bytecode will be directly compiled to machine code but I was wrong. When native image is produced all classes of our application and thier dependencies are staticly analyses to know which part of that code is reachable during runtime. This static analyse take JDK code under consideration as well. When we know all classes and methods used in the runtime then `GraalVM` compiles it ahead-of-time. To make this AOT compiled code to run we still need some runtime on which our program can be ran. The produced native image includes something called `Substrate VM` which is an embeddable wirtual machine containing components like memory management, thread scheduling, deoptimizer or even garbage collector. Having initial idea about what native image is let's install `GraalVM`, `native-image` utility and write some code.
+As already mentioned one of the main goals of `GraalVM` is the possibility to produce native images which are executables that do not require JRE (java runtime environment) to be present on the system. At first, when I heard about this feature I thought that the code instead to be compiled to bytecode will be directly compiled to machine code but I was wrong. During the process of creating a native image, all classes of our application and their dependencies are statically analyses to know which part of that code is reachable during runtime. These static analyses take JDK code under consideration as well. When we know all classes and methods used in the runtime then `GraalVM` compiles it ahead-of-time. To make this AOT compiled code to run we still need some runtime on which our program can be run. The produced native image includes something called `Substrate VM` which is an embeddable virtual machine containing components like memory management, thread scheduling, de-optimizer or even garbage collector. Having an initial idea about what native image is let's install `GraalVM`, `native-image` utility and write some code.
 
 ## Installation
 
-First let's install `GraalVM` through `sdkman`
+First, let's install `GraalVM` through `sdkman`
 
 {% highlight shell %}
 sudo apt update
@@ -35,7 +35,7 @@ source "/home/ubuntu/.sdkman/bin/sdkman-init.sh"
 sdk install java 19.0.0-grl
 {% highlight %}
 
-To use native-image command beside native image utility there are some [prerequisites](https://www.graalvm.org/docs/reference-manual/aot-compilation/#prerequisites)
+To use `native-image` command beside native image utility there are some [prerequisites](https://www.graalvm.org/docs/reference-manual/aot-compilation/#prerequisites)
 
 {% highlight shell %}
 gu install native-image
@@ -45,10 +45,9 @@ sudo apt install libz-dev
 
 ## Code
 
-As shown above we want to pipe output from `curl` command to our application as input. To get access to this input from application level we need to read it from `System.in`. [JsonPath](https://github.com/json-path/JsonPath) expreesion will be simply passed as argument. At the end we just need to evaluate expression on json, like so:
+As shown above, we want to pipe output from `curl` command to our application as input. To get access to this input from application level we need to read it from `System.in`. [JsonPath](https://github.com/json-path/JsonPath) expression will be simply passed as an argument. In the end, we just need to evaluate the expression on json. 
   
-  
-{% highlight %}java
+{% highlight java %}
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.stream.Collectors;
@@ -83,15 +82,15 @@ public class Application {
 }
 {% highlight %}
 
-## Compiltion 
+## Compilation 
 
-First we need to compile our java code with `javac` command
+First, we need to compile our java code with `javac` command
 
 {% highlight shell %}
 javac -cp "libs/*" Application.java
 {% highlight %}
 
-`libs` directory conains all 3rd party dependencies required for this application to run
+`libs` directory contains all 3rd party dependencies required for this application to run
 
 {% highlight shell %}
 tree
@@ -108,17 +107,17 @@ tree
 1 directory, 8 files
 {% highlight %}  
 
-After succesfull ran of compile command `Application.class` should be produced.
+After successful ran of compile command `Application.class` should be produced.
 
 ## Build native image
 
-Command to build native image is very similar to compiling java file, it require only java class and `-cp` paramter in case if we used external dependencies.
+Command to build native image is very similar to compiling java file, it requires only java class and `-cp` parameter in case if we use external dependencies which we do.
 
 {% highlight shell %}
 native-image -cp ".:libs/*" -H:Name=json_path  Application 
 {% highlight %}
 
-`-H:Name` is used just to give a name to produced executable. But running above command will fail with following message
+`-H:Name` is used just to give a name to produced executable. But running above command will fail with the following message
 
 {% highlight shell %}
 Warning: Aborting stand-alone image build. com.oracle.svm.hosted.substitute.DeletedElementException: Unsupported method java.lang.ClassLoader.defineClass(String, byte[], int, int) is reachable: The declaring class of this element has been substituted, but this element is not present in the substitution class
@@ -145,13 +144,13 @@ Call path from entry point to net.minidev.asm.DynamicClassLoader.defineClass(Str
         at com.oracle.svm.core.code.IsolateEnterStub.JavaMainWrapper_run_5087f5482cc9a6abc971913ece43acb471d2631b(generated:0)
 {% highlight %}
 
-Native images don't support dynamic class loading and this is understandable because due to the nature of AOT compilation where all classes and bytecodes that are ever reachable needs to be known at compile time. To see the full list of native image limitation see [https://github.com/oracle/graal/blob/master/substratevm/LIMITATIONS.md](https://github.com/oracle/graal/blob/master/substratevm/LIMITATIONS.md). But we still can take advantage of suggested solution and postphone any errors resulting from dynamic class loading to runtime by using `--report-unsupported-elements-at-runtime` option. Let's make second atempt to build native image
+Native images don't support dynamic class loading and this is understandable due to the nature of AOT compilation where all classes and bytecodes that are ever reachable needs to be known at compile time. To see the full list of native image limitation see [https://github.com/oracle/graal/blob/master/substratevm/LIMITATIONS.md](https://github.com/oracle/graal/blob/master/substratevm/LIMITATIONS.md). But we still can take advantage of the suggested solution and postpone any errors resulting from dynamic class loading to runtime by using `--report-unsupported-elements-at-runtime` option. Let's make the second attempt to build a native image
 
 {% highlight shell %}
  native-image -cp ".:libs/*" -H:Name=json_path --report-unsupported-elements-at-runtime  Application
  {% highlight %}
  
- This time it worked and `json_path` executable was created. To make our life easier let's register this executable to be accessible globaly in our system
+ This time it worked and `json_path` executable was created. To make our life easier let's register this executable to be accessible globally in our system
  
  {% highlight shell %}
 sudo ln -s /home/ubuntu/app/json_path /usr/local/bin/json_path
@@ -188,24 +187,24 @@ Caused by: java.lang.InstantiationException: Type `com.jayway.jsonpath.internal.
         ... 11 more
 {% highlight %}
 
-So new instance of `Length` type cannot be created. Quick sneek peek on failing part (`PathFunctionFactory.java:75`)
+So a new instance of `Length` type cannot be created. Quick sneak peek on failing part (`PathFunctionFactory.java:75`)
 
 {% highlight java %}
 public static PathFunction newFunction(String name) throws InvalidPathException {
-	Class functionClazz = FUNCTIONS.get(name);
-	if(functionClazz == null){
-		throw new InvalidPathException("Function with name: " + name + " does not exist.");
-	} else {
-		try {
-			return (PathFunction)functionClazz.newInstance();
-		} catch (Exception e) {
-			throw new InvalidPathException("Function of name: " + name + " cannot be created", e);
-		}
-	}
+    Class functionClazz = FUNCTIONS.get(name);
+    if(functionClazz == null){
+        throw new InvalidPathException("Function with name: " + name + " does not exist.");
+    } else {
+        try {
+            return (PathFunction)functionClazz.newInstance();
+        } catch (Exception e) {
+            throw new InvalidPathException("Function of name: " + name + " cannot be created", e);
+        }
+    }
 }
 {% highlight %}
 
-That's true, it looks like there is set of predefined function which then are dynamicly created. Fortunetly this can be fixed by indroducing reflection configuration file. This file is used to inform `Substrate VM` about reflectively accessed program elements. To know more see [https://github.com/oracle/graal/blob/master/substratevm/REFLECTION.md](https://github.com/oracle/graal/blob/master/substratevm/REFLECTION.md). To solve above issue we need to put one entry in `graal.json`
+That's true, it looks like there is a set of predefined function which then are dynamically created. Fortunately, this can be fixed by introducing reflection configuration file. This file is used to inform `Substrate VM` about reflectively accessed program elements. To know more see [https://github.com/oracle/graal/blob/master/substratevm/REFLECTION.md](https://github.com/oracle/graal/blob/master/substratevm/REFLECTION.md). To solve above issue we need to put one entry in `graal.json`
 
 {% highlight json %}
 [
@@ -218,16 +217,16 @@ That's true, it looks like there is set of predefined function which then are dy
 ]
 {% highlight %}
 
-After rebuild of `json_path` executable, previous commands started to work
+After the rebuild of `json_path` executable, previous commands started to work
 
 {% highlight shell %}
 curl -s https://www.anapioficeandfire.com/api/books/1 | json_path "$.characters.length()"
 434
-		
+        
 curl -s https://www.anapioficeandfire.com/api/books | json_path "$.[?(@.name == 'A Game of Thrones')].characters.length()"
 [434]
 {% highlight %}
 
 ## Conclusion
 
-I see big potential is these native images one of them are light and fast docker images [https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b](https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b) by Adam Warski. What he also mention is that in Scala reflection is almost unused. For me compiling very simple program to native image was a few hours of research and at this poin I don't see how I could do the same with small `Spring` application which in contrast to Scala use reflection heavily.
+I see the big potential is these native images one of them is light and fast docker images [https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b](https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b) as pointed out by Adam Warski. What he also mention is that in Scala reflection is almost unused. For me compiling a very simple program to the native image was a few hours of research and at this point, I don't see how I could do the same with small `Spring` application which in contrast to Scala use reflection heavily.
