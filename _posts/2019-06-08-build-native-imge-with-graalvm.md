@@ -165,7 +165,7 @@ curl -s https://api.github.com/users/ajurasz | json_path "$.created_at"
 
 Works like a charm but what about some more complex expressions
 
-{% highlight %}
+{% highlight shell %}
 curl -s https://www.anapioficeandfire.com/api/books/1 | json_path "$.characters.length()"
 
 Exception in thread "main" com.jayway.jsonpath.InvalidPathException: Function of name: length cannot be created
