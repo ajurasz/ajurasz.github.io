@@ -1,4 +1,0 @@
----
-slug: arduino
-name: Arduino
----

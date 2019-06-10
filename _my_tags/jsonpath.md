@@ -1,4 +1,0 @@
----
-slug: jsonpath
-name: JsonPath
----
