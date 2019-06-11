@@ -44,7 +44,7 @@ sudo apt install libz-dev
 
 ## Code
 
-As shown above, we want to pipe output from `curl` command to our application as input. To get access to this input from application level we need to read it from `System.in`. [JsonPath](https://github.com/json-path/JsonPath) expression will be simply passed as an argument. In the end, we just need to evaluate the expression on json. 
+As shown above, we want to pipe output from `curl` command to our application as input. To get access to this input from application level we need to read it from `System.in`. [JsonPath](https://github.com/json-path/JsonPath) expression will be simply passed as an argument. In the end, we just need to evaluate the expression against received json. 
   
 ```java
 import java.io.BufferedReader;
@@ -228,4 +228,4 @@ curl -s https://www.anapioficeandfire.com/api/books | json_path "$.[?(@.name == 
 
 ## Conclusion
 
-I see the big potential is these native images one of them is light and fast docker images [https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b](https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b) as pointed out by Adam Warski. What he also mention is that in Scala reflection is almost unused. For me compiling a very simple program to the native image was a few hours of research and at this point, I don't see how I could do the same with small `Spring` application which in contrast to Scala use reflection heavily.
+I see the big potential in these native images one of them is light and fast docker images [https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b](https://blog.softwaremill.com/small-fast-docker-images-using-graalvms-native-image-99c0bc92e70b) as pointed out by Adam Warski. What he also mention is that in Scala reflection is almost unused. For me compiling a very simple program to the native image was a few hours of research and at this point, I don't see how I could do the same with small `Spring` application which in contrast to Scala ecosystem use reflection heavily.
