@@ -10,7 +10,8 @@ module.exports = {
     github: 'https://github.com/ajurasz',
     twitter: 'https://twitter.com/arekjurasz',
     linkedin: 'https://www.linkedin.com/in/arkadiusz-jurasz/',
+    rss: 'https://ajurasz.github.io/rss.xml'
   },
   pathPrefix: '/',
-  siteUrl: 'https://ajurasz.github.io/',
+  siteUrl: 'https://ajurasz.github.io',
 };

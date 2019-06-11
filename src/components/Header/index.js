@@ -26,6 +26,7 @@ function Header({ config }) {
             github={social.github}
             twitter={social.twitter}
             linkedin={social.linkedin}
+            rss={social.rss}
           />
         }
       </Wrapper>
