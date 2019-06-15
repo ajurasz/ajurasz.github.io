@@ -31,7 +31,6 @@ const IndexPage = ({ pageContext }) => {
               <Summary
                 date={node.frontmatter.date}
                 title={node.frontmatter.title}
-                excerpt={node.excerpt}
                 image={node.frontmatter.featuredImage}
                 slug={node.fields.slug}
                 excerpt={node.html.split('<!-- end -->')[0]}
