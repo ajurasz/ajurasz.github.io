@@ -2,11 +2,13 @@ import React from 'react';
 
 import FeaturedImage from '../FeaturedImage';
 import H1 from '../H1';
+import P from '../P';
 import Wrapper from './Wrapper';
 import Link from './Link';
 import Date from './Date';
+import ContinueReading from './ContinueReading';
 
-function Summary({date, title, slug, image}) {
+function Summary({date, title, slug, image, excerpt}) {
   return (
     <Wrapper>
         {image &&
@@ -16,6 +18,10 @@ function Summary({date, title, slug, image}) {
         }
         <H1><Link to={slug}>{title}</Link></H1>
         <Date>{date}</Date>
+        <P>
+          <div dangerouslySetInnerHTML={{ __html: excerpt }} />
+        </P>
+        <ContinueReading to={slug}>Continue Reading &rarr;</ContinueReading>
     </Wrapper>
   );
 }

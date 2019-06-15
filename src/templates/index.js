@@ -34,6 +34,7 @@ const IndexPage = ({ pageContext }) => {
                 excerpt={node.excerpt}
                 image={node.frontmatter.featuredImage}
                 slug={node.fields.slug}
+                excerpt={node.html.split('<!-- end -->')[0]}
               />
             </Card>
           ))}

@@ -4,13 +4,11 @@ date: "2019-06-08"
 tags: [java]
 ---
 
-Last month first production-ready version of `GraalVM` with number `19.0` was released. `GraalVM` is a virtual machine capable to run application written in `JavaScript`, `Python`, `Ruby`, `R`, LLVM-based languages like `C`, `C++` and of course our beloved JVM-based languages like `Java`, `Scala`, `Kotlin`, `Groovy` and `Clojure`. Some of the main goals for this new virtual machine are:
+Last month first production-ready version of `GraalVM` with number `19.0` was released. `GraalVM` is a virtual machine capable to run application written in `JavaScript`, `Python`, `Ruby`, `R`, LLVM-based languages like `C`, `C++` and of course our beloved JVM-based languages like `Java`, `Scala`, `Kotlin`, `Groovy` and `Clojure`. <!-- end --> Some of the main goals for this new virtual machine are:
  - improve the performance of applications build with JVM-based languages
  - reduce startup time by usage of AOT (ahead-of-time) compilation
  - write polyglot applications
  - compile JVM-based code to a standalone executable a.k.a. native image.
-
-<!-- end -->
 
 With this post, I would like to focus on the last goal and build a native image. The assumption is very simple, take [JsonPath](https://github.com/json-path/JsonPath) library, write some `Java` code to interact with this library and then from terminal quickly test any [JsonPath](https://github.com/json-path/JsonPath) expression you can think of, like
 

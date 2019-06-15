@@ -23,7 +23,7 @@ exports.createPages = ({ graphql, actions }) => {
                   fields {
                     slug
                   }
-                  excerpt
+                  html
                   frontmatter {
                     title
                     date(formatString: "MMMM D, YYYY")
@@ -31,7 +31,7 @@ exports.createPages = ({ graphql, actions }) => {
                 }
               }
             }
-          }
+          } 
         `,
       ).then(result => {
         if (result.errors) {
