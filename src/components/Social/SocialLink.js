@@ -12,7 +12,6 @@ const SocialLink = styled.a`
   svg {
     display: inline-block;
     height: 20px;
-    margin-right: 5px;
     stroke: #6e849c;
     vertical-align: middle;
     width: 20px;
