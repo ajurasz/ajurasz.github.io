@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>RSS for Node</generator><lastBuildDate>Fri, 05 Jul 2019 12:11:24 GMT</lastBuildDate><item><title><![CDATA[Spring Boot Maven Plugin and provided scope]]></title><description><![CDATA[If you come from the JavaEE world you probably did set some of your project dependencies to the scope of   if so then you can find one fact…]]></description><link>https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</guid><pubDate>Fri, 05 Jul 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;If you come from the JavaEE world you probably did set some of your project dependencies to the scope of &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; if so then you can find one fact about &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to be interesting.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>RSS for Node</generator><lastBuildDate>Fri, 05 Jul 2019 19:15:12 GMT</lastBuildDate><item><title><![CDATA[Spring Boot Maven Plugin and provided scope]]></title><description><![CDATA[If you come from the JavaEE world you probably did set some of your project dependencies to the scope of   if so then you can find one fact…]]></description><link>https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</guid><pubDate>Fri, 05 Jul 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;If you come from the JavaEE world you probably did set some of your project dependencies to the scope of &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; if so then you can find one fact about &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to be interesting.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;p&gt;After adding &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; scope to a dependency you expect that JDK or container (like JavaEE application server) will provide this dependency at runtime. Expected behaviour when running application without providing these dependencies will be to see &lt;code class=&quot;language-text&quot;&gt;NoClassDefFoundError&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;ClassNotFoundException&lt;/code&gt; all depends on how these missing classes are accessed (for more information see &lt;a href=&quot;https://dzone.com/articles/java-classnotfoundexception-vs-noclassdeffounderro&quot;&gt;this article&lt;/a&gt;). But this is not a case when using &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to run your application in standalone mode i.e. outside of any kind of container. After reading the explanation from Phil Webb (Pivotal) this behaviour makes sense:&lt;/p&gt;
 &lt;blockquote&gt;
@@ -419,6 +419,14 @@ Caused by: java.lang.IllegalAccessError: class com.example.demo.PointcutedHelloC
 &lt;p&gt;After debugging session I was able to nail down which &lt;code class=&quot;language-text&quot;&gt;classloader&lt;/code&gt; is used when creating proxy.&lt;/p&gt;
 &lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;Spring AOP&lt;/code&gt; creates its proxies through &lt;code class=&quot;language-text&quot;&gt;CglibAopProxy#getProxy(classLoader)&lt;/code&gt;. This &lt;code class=&quot;language-text&quot;&gt;ClassLoader&lt;/code&gt; object in the end is provided by &lt;code class=&quot;language-text&quot;&gt;DefaultResourceLoader&lt;/code&gt; which sets &lt;code class=&quot;language-text&quot;&gt;classLoader&lt;/code&gt; to &lt;code class=&quot;language-text&quot;&gt;Thread.currentThread().getContextClassLoader()&lt;/code&gt; during object construction. Bellow is screenshot which shows how &lt;code class=&quot;language-text&quot;&gt;classLoader&lt;/code&gt; provided by &lt;code class=&quot;language-text&quot;&gt;DefaultResourceLoader&lt;/code&gt; (left) differs from &lt;code class=&quot;language-text&quot;&gt;classLoader&lt;/code&gt; awaible in any other place of my application when calling &lt;code class=&quot;language-text&quot;&gt;getClass().getClassLoader()&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-bc2a5.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
@@ -432,18 +440,20 @@ Caused by: java.lang.IllegalAccessError: class com.example.demo.PointcutedHelloC
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;wlp-classloaders&quot;
         title=&quot;&quot;
-        src=&quot;/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-bc3ba.png&quot;
-        srcset=&quot;/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-367a5.png 175w,
-/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-cfecb.png 350w,
-/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-bc3ba.png 700w,
-/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-1b41b.png 1050w,
-/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-50f8d.png 1400w,
-/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-82085.png 1889w&quot;
+        src=&quot;/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-7ff64.png&quot;
+        srcset=&quot;/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-32ef8.png 175w,
+/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-4ab60.png 350w,
+/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-7ff64.png 700w,
+/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-ab3bc.png 1050w,
+/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-17371.png 1400w,
+/static/wlp-classloaders-bbf863545b228772548aee63cf3863d0-bc2a5.png 1889w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;It looks like the one created by &lt;code class=&quot;language-text&quot;&gt;DefaultResourceLoader&lt;/code&gt; is not aware of my classes so that’s the reason why application crashes on startup.&lt;/p&gt;
 &lt;h3&gt;Fix&lt;/h3&gt;
 &lt;p&gt;We know that everything starts in &lt;code class=&quot;language-text&quot;&gt;DefaultResourceLoader&lt;/code&gt; so we can register our custom &lt;code class=&quot;language-text&quot;&gt;ServletContextInitializer&lt;/code&gt; to override default &lt;code class=&quot;language-text&quot;&gt;classLoader&lt;/code&gt; created by &lt;code class=&quot;language-text&quot;&gt;DefaultResourceLoader&lt;/code&gt;. This can be done by extending &lt;code class=&quot;language-text&quot;&gt;SpringBootServletInitializer&lt;/code&gt; class like so:&lt;/p&gt;
@@ -567,6 +577,14 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
 &lt;p&gt;Above approach (2) is available starting from &lt;code class=&quot;language-text&quot;&gt;cf&lt;/code&gt; CLI version &lt;code class=&quot;language-text&quot;&gt;v6.38&lt;/code&gt; or later. Before you had to use a different command for pushing multiple buildpacks:&lt;/p&gt;
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;cf v3-push -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpack&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content:encoded></item><item><title><![CDATA[Kotlin + AWS Lambda + Serverless Framework]]></title><description><![CDATA[Some time ago I came across the following tweet. There were two things that took my attention - kotlin and Rekognition. First one is a “new…]]></description><link>https://ajurasz.github.io/2017-05-28-kotlin-aws-lambda-serverless-framework/</link><guid isPermaLink="false">https://ajurasz.github.io/2017-05-28-kotlin-aws-lambda-serverless-framework/</guid><pubDate>Sun, 28 May 2017 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Some time ago I came across the following tweet.&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-015ea.jpg&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 581px; margin-left: auto; margin-right: auto;&quot;
@@ -580,15 +598,17 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;tweet_aws_kotlin&quot;
         title=&quot;&quot;
-        src=&quot;/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-04126.jpg&quot;
-        srcset=&quot;/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-87518.jpg 175w,
-/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-cc141.jpg 350w,
-/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-04126.jpg 581w&quot;
+        src=&quot;/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-015ea.jpg&quot;
+        srcset=&quot;/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-63677.jpg 175w,
+/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-a45f4.jpg 350w,
+/static/tweet_aws_kotlin-e087ba82deeb3973414aa247f4b459e6-015ea.jpg 581w&quot;
         sizes=&quot;(max-width: 581px) 100vw, 581px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;There were two things that took my attention - kotlin and Rekognition.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;p&gt;First one is a “new” (it’s relly developed by over 6 years now) JVM language created by JetBrains, company that stands behind great tooling for developers of different professions. The second is an AWS service, this is how it is described on their page&lt;/p&gt;
@@ -612,11 +632,11 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;faas_diagram&quot;
         title=&quot;&quot;
-        src=&quot;/static/faas_diagram-75f2521335608d5d448030d8d8111009-177e4.jpg&quot;
-        srcset=&quot;/static/faas_diagram-75f2521335608d5d448030d8d8111009-6c2d5.jpg 175w,
-/static/faas_diagram-75f2521335608d5d448030d8d8111009-3d17c.jpg 350w,
-/static/faas_diagram-75f2521335608d5d448030d8d8111009-177e4.jpg 700w,
-/static/faas_diagram-75f2521335608d5d448030d8d8111009-dcbce.jpg 801w&quot;
+        src=&quot;/static/faas_diagram-75f2521335608d5d448030d8d8111009-f9ba3.jpg&quot;
+        srcset=&quot;/static/faas_diagram-75f2521335608d5d448030d8d8111009-7d3cb.jpg 175w,
+/static/faas_diagram-75f2521335608d5d448030d8d8111009-d8afd.jpg 350w,
+/static/faas_diagram-75f2521335608d5d448030d8d8111009-f9ba3.jpg 700w,
+/static/faas_diagram-75f2521335608d5d448030d8d8111009-df1ca.jpg 801w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -665,6 +685,14 @@ where we first define &lt;code class=&quot;language-text&quot;&gt;provider&lt;/c
 &lt;h2&gt;Lambda in action&lt;/h2&gt;
 &lt;p&gt;I wrote a simple CRD (no update) functions with custom authentication mechanism - probably using &lt;a href=&quot;https://aws.amazon.com/cognito/&quot;&gt;AWS Cognito&lt;/a&gt; would be a preferred way to go but I wanted to check how flexible are these lambda functions in terms of implementing own authentication. Application architecture is following&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-df099.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
@@ -678,17 +706,19 @@ where we first define &lt;code class=&quot;language-text&quot;&gt;provider&lt;/c
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;architecture_aws_lambda&quot;
         title=&quot;&quot;
-        src=&quot;/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-bc3ba.png&quot;
-        srcset=&quot;/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-367a5.png 175w,
-/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-cfecb.png 350w,
-/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-bc3ba.png 700w,
-/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-1b41b.png 1050w,
-/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-a4289.png 1210w&quot;
+        src=&quot;/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-7ff64.png&quot;
+        srcset=&quot;/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-32ef8.png 175w,
+/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-4ab60.png 350w,
+/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-7ff64.png 700w,
+/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-ab3bc.png 1050w,
+/static/architecture_aws_lambda-c345b9c56b520224ea049671d45bb9b6-df099.png 1210w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;I believe that above diagram is self-explanatory so let’s dive into one of the functions. &lt;a href=&quot;https://github.com/ajurasz/ascii-less-gallery/blob/master/src/main/kotlin/ajurasz/lambda/gallery/CreateHandler.kt&quot;&gt;CreateHandler&lt;/a&gt;, the entry point is &lt;code class=&quot;language-text&quot;&gt;handleRequest&lt;/code&gt; function triggered by AWS when an HTTP POST request reaches API Gateway at &lt;code class=&quot;language-text&quot;&gt;/gallery&lt;/code&gt; path.&lt;/p&gt;
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;kotlin&quot;&gt;&lt;pre class=&quot;language-kotlin&quot;&gt;&lt;code class=&quot;language-kotlin&quot;&gt;    &lt;span class=&quot;token keyword&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;handleRequest&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;input&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; Request&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; context&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; Context&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; String &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
         LOG&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;debug&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;input(\n&lt;span class=&quot;token interpolation variable&quot;&gt;$input&lt;/span&gt;\n)&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
@@ -768,6 +798,14 @@ Solution to my issue would be replacing the old furnace with new one that can au
 &lt;p&gt;My idea is to use &lt;a href=&quot;https://en.wikipedia.org/wiki/ESP8266&quot;&gt;ESP8266&lt;/a&gt; that will send temperature readings to &lt;a href=&quot;https://www.cloudmqtt.com/&quot;&gt;MQTT broker&lt;/a&gt; running in the cloud
 and then business logic will be handled by lightweight nodejs application running on &lt;a href=&quot;https://dashboard.heroku.com/&quot;&gt;Heroku&lt;/a&gt;. Logic is simple, display the current temperature in real time one web page using WebSocket protocol, expose REST endpoint with current temperature and send a notification to registered Android devices when the temperature is over 80 Celcius degrees. Registered devices will be stored in MongoDB hosted by &lt;a href=&quot;https://mlab.com/&quot;&gt;mLab&lt;/a&gt;. Here is top level architecture diagram:&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-00ae1.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 690px; margin-left: auto; margin-right: auto;&quot;
@@ -781,15 +819,17 @@ and then business logic will be handled by lightweight nodejs application runnin
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;esp8266_remote_temperature_diagram&quot;
         title=&quot;&quot;
-        src=&quot;/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-80db2.png&quot;
-        srcset=&quot;/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-24d5e.png 175w,
-/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-99a10.png 350w,
-/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-80db2.png 690w&quot;
+        src=&quot;/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-00ae1.png&quot;
+        srcset=&quot;/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-2326e.png 175w,
+/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-3b1dd.png 350w,
+/static/esp8266_remote_temperature_diagram-5e5d7d080fb98fe2e4801751713735c5-00ae1.png 690w&quot;
         sizes=&quot;(max-width: 690px) 100vw, 690px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;h2&gt;Costs&lt;/h2&gt;
 &lt;p&gt;Only costs I had to bear were for physical devices:&lt;/p&gt;
 &lt;ul&gt;
@@ -811,6 +851,14 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;h3&gt;ESP8226&lt;/h3&gt;
 &lt;p&gt;If it comes to ESP8266 there are two main things that you need to know when playing with this device. There are different wirings for deploying and running your program. When you want to deploy your program to the device you need to set up wirings in following way:&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-1203c.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
@@ -824,19 +872,29 @@ and then business logic will be handled by lightweight nodejs application runnin
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;ESP8266_upload&quot;
         title=&quot;&quot;
-        src=&quot;/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-bc3ba.png&quot;
-        srcset=&quot;/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-367a5.png 175w,
-/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-cfecb.png 350w,
-/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-bc3ba.png 700w,
-/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-1b41b.png 1050w,
-/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-d48fe.png 1061w&quot;
+        src=&quot;/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-7ff64.png&quot;
+        srcset=&quot;/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-32ef8.png 175w,
+/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-4ab60.png 350w,
+/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-7ff64.png 700w,
+/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-ab3bc.png 1050w,
+/static/ESP8266_upload-25249e1fdd8758c1dcd6545a8021fe83-1203c.png 1061w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;when you want to run your program, wirings should be set up in the following way (scheme contains temperature sensor connected to ESP8266):&lt;/p&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-8741b.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 254px; margin-left: auto; margin-right: auto;&quot;
@@ -850,14 +908,16 @@ and then business logic will be handled by lightweight nodejs application runnin
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;ESP8266_run&quot;
         title=&quot;&quot;
-        src=&quot;/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-f8c1e.png&quot;
-        srcset=&quot;/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-addb9.png 175w,
-/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-f8c1e.png 254w&quot;
+        src=&quot;/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-8741b.png&quot;
+        srcset=&quot;/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-0636f.png 175w,
+/static/ESP8266_run-85801ae33ce503d5e02cee5724711ac0-8741b.png 254w&quot;
         sizes=&quot;(max-width: 254px) 100vw, 254px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;Main responsibilities of ESP8226 device are:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;establish and keep a connection to local network (to gain access to the internet) &lt;/li&gt;
@@ -1049,6 +1109,14 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
 &lt;li&gt;widget&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-aac86.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 346px; margin-left: auto; margin-right: auto;&quot;
@@ -1062,18 +1130,28 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;android_widget&quot;
         title=&quot;&quot;
-        src=&quot;/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-7c0f2.png&quot;
-        srcset=&quot;/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-91e8b.png 175w,
-/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-7c0f2.png 346w&quot;
+        src=&quot;/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-aac86.png&quot;
+        srcset=&quot;/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-012c4.png 175w,
+/static/android_widget-e9e73577e9a8e2aaa4f0b1e1eab4f702-aac86.png 346w&quot;
         sizes=&quot;(max-width: 346px) 100vw, 346px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;ol start=&quot;2&quot;&gt;
 &lt;li&gt;notification&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/android_notification-661067bfd7d5360baed870f1284e362d-aac86.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 346px; margin-left: auto; margin-right: auto;&quot;
@@ -1087,14 +1165,16 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;android_notification&quot;
         title=&quot;&quot;
-        src=&quot;/static/android_notification-661067bfd7d5360baed870f1284e362d-7c0f2.png&quot;
-        srcset=&quot;/static/android_notification-661067bfd7d5360baed870f1284e362d-91e8b.png 175w,
-/static/android_notification-661067bfd7d5360baed870f1284e362d-7c0f2.png 346w&quot;
+        src=&quot;/static/android_notification-661067bfd7d5360baed870f1284e362d-aac86.png&quot;
+        srcset=&quot;/static/android_notification-661067bfd7d5360baed870f1284e362d-012c4.png 175w,
+/static/android_notification-661067bfd7d5360baed870f1284e362d-aac86.png 346w&quot;
         sizes=&quot;(max-width: 346px) 100vw, 346px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;Integration with FCM was kind of tricky but &lt;a href=&quot;https://firebase.google.com/docs/cloud-messaging/android/client&quot;&gt;“Set Up a Firebase Cloud Messaging Client App on Android”&lt;/a&gt; article helped me a lot. It will take you step by step how to set up FCM client.&lt;/p&gt;
 &lt;h2&gt;Future work&lt;/h2&gt;
 &lt;p&gt;I will try to replace Nodejs application with application that use &lt;a href=&quot;http://vertx.io/&quot;&gt;Vert.x&lt;/a&gt; library.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Watch were you put your license headers]]></title><description><![CDATA[Recently when I was playing with creating  Docker  images I came across really strange error during creation of a container that doesn’t say…]]></description><link>https://ajurasz.github.io/2016-11-02-watch-were-you-put-your-license-headers/</link><guid isPermaLink="false">https://ajurasz.github.io/2016-11-02-watch-were-you-put-your-license-headers/</guid><pubDate>Wed, 02 Nov 2016 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Recently when I was playing with creating &lt;a href=&quot;https://www.docker.com/&quot;&gt;Docker&lt;/a&gt; images I came across really strange error during creation of a container that doesn’t say much (not to me):&lt;/p&gt;
@@ -1213,6 +1293,14 @@ Success&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Note: for 3 and 4 only one LED can be on.&lt;/p&gt;
 &lt;h4&gt;Wiring&lt;/h4&gt;
 &lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-cd76f.jpg&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
   &lt;span
     class=&quot;gatsby-resp-image-wrapper&quot;
     style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 651px; margin-left: auto; margin-right: auto;&quot;
@@ -1226,15 +1314,17 @@ Success&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;Posts per blog&quot;
         title=&quot;&quot;
-        src=&quot;/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-5ac04.jpg&quot;
-        srcset=&quot;/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-562a6.jpg 175w,
-/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-7a8ed.jpg 350w,
-/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-5ac04.jpg 651w&quot;
+        src=&quot;/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-cd76f.jpg&quot;
+        srcset=&quot;/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-a8a55.jpg 175w,
+/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-ffe5f.jpg 350w,
+/static/bluetooth-scanner-witing-3b3ae090a9f39281fe6e6b20af8d57c1-cd76f.jpg 651w&quot;
         sizes=&quot;(max-width: 651px) 100vw, 651px&quot;
       /&gt;
     &lt;/span&gt;
   &lt;/span&gt;
-  &lt;/p&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
 &lt;p&gt;To assemble this schematic you will require:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;1 Raspberry Pi B+ (or 2)&lt;/li&gt;
