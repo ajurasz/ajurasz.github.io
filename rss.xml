@@ -1,4 +1,53 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>RSS for Node</generator><lastBuildDate>Fri, 05 Jul 2019 19:15:12 GMT</lastBuildDate><item><title><![CDATA[Spring Boot Maven Plugin and provided scope]]></title><description><![CDATA[If you come from the JavaEE world you probably did set some of your project dependencies to the scope of   if so then you can find one fact…]]></description><link>https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</guid><pubDate>Fri, 05 Jul 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;If you come from the JavaEE world you probably did set some of your project dependencies to the scope of &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; if so then you can find one fact about &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to be interesting.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>RSS for Node</generator><lastBuildDate>Fri, 02 Aug 2019 20:06:11 GMT</lastBuildDate><item><title><![CDATA[NOT NULL is NOT NULL]]></title><description><![CDATA[Recently I learned that MySQL 5.6 is so “nice” that it can provide default values for columns that have   constrain when values for these…]]></description><link>https://ajurasz.github.io/2019-08-02-not-null-is-not-null/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-08-02-not-null-is-not-null/</guid><pubDate>Fri, 02 Aug 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Recently I learned that MySQL 5.6 is so “nice” that it can provide default values for columns that have &lt;code class=&quot;language-text&quot;&gt;NOT NULL&lt;/code&gt; constrain when values for these columns are missing during insertion.&lt;/p&gt;
+&lt;!-- end --&gt;
+&lt;p&gt;This feature is called &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.6/en/data-type-defaults.html#data-types-defaults-implicit&quot;&gt;Implicit Defaults&lt;/a&gt;. Below is a complete example which shows this feature:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;&amp;gt; docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=root -d mysql:5.6
+&amp;gt; docker exec -it some-mysql bash
+
+# mysql -u root -p
+Enter password:
+
+mysql&amp;gt; CREATE DATABASE test;
+Query OK, 1 row affected (0.01 sec)
+
+mysql&amp;gt; use test;
+Database changed
+mysql&amp;gt; CREATE TABLE MY_DATA (id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    -&amp;gt; name VARCHAR(10) NOT NULL,
+    -&amp;gt; value INT NOT NULL);
+Query OK, 0 rows affected (0.05 sec)
+
+mysql&amp;gt; INSERT INTO MY_DATA (name, value) VALUES (&amp;#39;a&amp;#39;, 1);
+Query OK, 1 row affected (0.04 sec)
+
+mysql&amp;gt; INSERT INTO MY_DATA (name) VALUES (&amp;#39;c&amp;#39;);
+Query OK, 1 row affected, 1 warning (0.01 sec)
+
+mysql&amp;gt; SELECT * FROM MY_DATA;
++----+------+-------+
+| id | name | value |
++----+------+-------+
+|  1 | a    |     1 |
+|  2 | c    |     0 |
++----+------+-------+
+2 rows in set (0.04 sec)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Base on the linked documentation for implicit defaults our database server has got &lt;strong&gt;strict mode disabled by default&lt;/strong&gt;. What is strict mode? &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Strict mode controls how MySQL handles invalid or missing values in data-change statements such as INSERT or UPDATE.
+Source: &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.6/en/sql-mode.html#sql-mode-strict#sql-mode-strict&quot;&gt;https://dev.mysql.com/doc/refman/5.6/en/sql-mode.html#sql-mode-strict#sql-mode-strict&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;If we will repeat above code snipped with a more recent version of MySQL like 8 were &lt;strong&gt;strict mode is enabled by default&lt;/strong&gt; then last insert command won’t work.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;&amp;gt; docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=root -d mysql:8
+
+...
+
+mysql&amp;gt; INSERT INTO MY_DATA (name) VALUES (&amp;#39;c&amp;#39;);
+ERROR 1364 (HY000): Field &amp;#39;value&amp;#39; doesn&amp;#39;t have a default value&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;When you work with MySQL and use a different version of the software make yourself a favour and check what SQL mode(s) are set on the environment with which you start to work. This can be done with single SQL command:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;sql&quot;&gt;&lt;pre class=&quot;language-sql&quot;&gt;&lt;code class=&quot;language-sql&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt; @&lt;span class=&quot;token variable&quot;&gt;@GLOBAL.sql_mode&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and then invest few minutest to learn how enabled modes affect the SQL syntax MySQL supports and how data validation checks are performed. You can find a full list of SQL modes &lt;a href=&quot;https://dev.mysql.com/doc/refman/5.6/en/sql-mode.html#sql-mode-full&quot;&gt;here&lt;/a&gt;. &lt;/p&gt;
+&lt;p&gt;So that you won’t have to spend a few hours figuring out why some of your e2e tests doesn’t work only on one environment!&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Spring Boot Maven Plugin and provided scope]]></title><description><![CDATA[If you come from the JavaEE world you probably did set some of your project dependencies to the scope of   if so then you can find one fact…]]></description><link>https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-07-05-spring-boot-maven-plugin-and-provided-scope/</guid><pubDate>Fri, 05 Jul 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;If you come from the JavaEE world you probably did set some of your project dependencies to the scope of &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; if so then you can find one fact about &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to be interesting.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;p&gt;After adding &lt;code class=&quot;language-text&quot;&gt;provided&lt;/code&gt; scope to a dependency you expect that JDK or container (like JavaEE application server) will provide this dependency at runtime. Expected behaviour when running application without providing these dependencies will be to see &lt;code class=&quot;language-text&quot;&gt;NoClassDefFoundError&lt;/code&gt; or &lt;code class=&quot;language-text&quot;&gt;ClassNotFoundException&lt;/code&gt; all depends on how these missing classes are accessed (for more information see &lt;a href=&quot;https://dzone.com/articles/java-classnotfoundexception-vs-noclassdeffounderro&quot;&gt;this article&lt;/a&gt;). But this is not a case when using &lt;code class=&quot;language-text&quot;&gt;spring-boot-maven-plugin&lt;/code&gt; to run your application in standalone mode i.e. outside of any kind of container. After reading the explanation from Phil Webb (Pivotal) this behaviour makes sense:&lt;/p&gt;
 &lt;blockquote&gt;
