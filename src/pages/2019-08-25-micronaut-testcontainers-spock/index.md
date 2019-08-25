@@ -64,6 +64,7 @@ class TodoControllerSpec extends IntegrationSpecification {
     def "should get all todos"() {
         // test body
     }
+}
 ```
 
 This setup revels one potential problem. Potential because it does not have to be a problem for every case due to the main feature of the framework mentioned at the beginning - fast startup time. 
