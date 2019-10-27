@@ -75,6 +75,7 @@ public abstract class Event implements Comparable<Event> {
 	
 	// rest of the code from the previous snippet stays as it was
 }
+```
 
 Unfortunately, I didn't figure what is wrong on my own so I had to look for an explanation on the web. In the official [documentation](http://docs.groovy-lang.org/latest/html/documentation/#_behaviour_of_code_code) I have found the following:
 
