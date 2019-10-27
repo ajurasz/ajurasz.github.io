@@ -8,6 +8,8 @@ If you come from Java land and are lucky enough then you probably write your tes
 
 <!-- end -->
 
+Let's assume we have got following `Java` classes:
+
 ```java
 public abstract class Event {
 	private final timestamp = Instant.now().toEpochMilli();
