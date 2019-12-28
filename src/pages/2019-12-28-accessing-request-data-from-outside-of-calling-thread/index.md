@@ -106,4 +106,4 @@ Then we need to instruct spring to use our custom implementation of `TaskExecuto
 
 Please notice that the above solution should be considered more like a workaround than a final solution. A better approach would be to extract all required data while still in the context of calling thread and then pass these data to all interested parties.
 
-The full example can be found at [github]().
+The full example can be found at [github](https://github.com/ajurasz/no-thread-bound-request).
