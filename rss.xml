@@ -1,4 +1,115 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sat, 28 Dec 2019 19:42:53 GMT</lastBuildDate><item><title><![CDATA[Accessing HTTP request data from outside of calling thread]]></title><description><![CDATA[It’s almost end of 2019 but there is still a lot of application which depends on Servlet specification - this statement is base on my…]]></description><link>https://ajurasz.github.io/2019-12-28-accessing-request-data-from-outside-of-calling-thread/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-12-28-accessing-request-data-from-outside-of-calling-thread/</guid><pubDate>Sat, 28 Dec 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;It’s almost end of 2019 but there is still a lot of application which depends on Servlet specification - this statement is base on my personal experience where I still see the majority of a new application being built using this technology. In this blog post, I will focus on a single use case where we will retrieve HTTP request data from outside of calling thread in &lt;code class=&quot;language-text&quot;&gt;Spring Framework&lt;/code&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sun, 12 Apr 2020 18:48:23 GMT</lastBuildDate><item><title><![CDATA[Continuous Deployment on Kubernetes]]></title><description><![CDATA[If you are wondering how could you set up your build pipeline to do a deployment of your application to Kubernetes cluster then you can find…]]></description><link>https://ajurasz.github.io/2020-04-12-continuous-deployment-on-kubernetes/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-04-12-continuous-deployment-on-kubernetes/</guid><pubDate>Sun, 12 Apr 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;If you are wondering how could you set up your build pipeline to do a deployment of your application to Kubernetes cluster then you can find this post interesting.&lt;/p&gt;
+&lt;!-- end --&gt;
+&lt;h2&gt;Disclaimer&lt;/h2&gt;
+&lt;p&gt;Everything that will be presented in this blog post was only used for Test and QA environments as a way to learn more about Kubernetes. It was not used for Prod environment yet so please keep this in your mind.&lt;/p&gt;
+&lt;h2&gt;Stack&lt;/h2&gt;
+&lt;p&gt;Before moving to details it’s worth mentioning what I have to disposal:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Kubernetes cluster&lt;/li&gt;
+&lt;li&gt;Jenkins pipeline job&lt;/li&gt;
+&lt;li&gt;Private Docker registry&lt;/li&gt;
+&lt;li&gt;Dockerized application&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Build&lt;/h2&gt;
+&lt;p&gt;Since Jenkins pipeline job is in place then the deployment is as easy as adding a new stage to an existing job pipeline. I have called mine &lt;code class=&quot;language-text&quot;&gt;Deploy&lt;/code&gt;. This stage is responsible for the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;run only on &lt;code class=&quot;language-text&quot;&gt;develop&lt;/code&gt; branch&lt;/li&gt;
+&lt;li&gt;build docker image&lt;/li&gt;
+&lt;li&gt;push the docker image to a repository&lt;/li&gt;
+&lt;li&gt;call &lt;a href=&quot;https://jenkins.io/doc/pipeline/steps/kubernetes-cd/#kubernetes-continuous-deploy-plugin&quot;&gt;Kubernetes Continuous Deploy Plugin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;remove docker image from Jenkins worker (just to save space)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;pipeline {
+    stages {
+        stage(&amp;#39;Deploy&amp;#39;) {
+            when {
+                branch &amp;quot;develop&amp;quot;
+            }
+
+            environment {
+                DOCKER_REPOSITORY = &amp;#39;127.0.0.1:5000&amp;#39;
+                IMAGE_NAME = &amp;#39;app&amp;#39;
+                IMAGE_TAG = sh(script: &amp;quot;git log -1 --pretty=%h&amp;quot;undefined returnStdout: true).trim()
+                APP_IMAGE = &amp;quot;${DOCKER_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}&amp;quot;
+            }
+
+            steps {
+                sh &amp;quot;&amp;quot;&amp;quot;
+                docker build -t ${APP_IMAGE} ./docker
+                &amp;quot;&amp;quot;&amp;quot;
+
+                sh &amp;quot;&amp;quot;&amp;quot;
+                docker push ${APP_IMAGE}
+                &amp;quot;&amp;quot;&amp;quot;
+
+                kubernetesDeploy(kubeconfigId: &amp;#39;k8s-config&amp;#39;undefined configs: &amp;#39;**/k8s/qa/app.yml&amp;#39;)
+            }
+
+            post {
+                always {
+                    sh &amp;quot;&amp;quot;&amp;quot;
+                    docker rmi ${APP_IMAGE}
+                    &amp;quot;&amp;quot;&amp;quot;
+                }
+            }
+        }
+    }
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In the above snippet, there are two important things to notice. First is the registration of environment variable with name &lt;code class=&quot;language-text&quot;&gt;APP_IMAGE&lt;/code&gt;. The second most important thing is that kubernetes-cd plugin can substitute variables in the form of &lt;code class=&quot;language-text&quot;&gt;${APP_IMAGE}&lt;/code&gt; in the configuration file (&lt;code class=&quot;language-text&quot;&gt;app.yml&lt;/code&gt;) with variables from Jenkins environment. This is the default behaviour of the plugin and can be disabled with &lt;code class=&quot;language-text&quot;&gt;enableConfigSubstitution&lt;/code&gt; set to &lt;code class=&quot;language-text&quot;&gt;false&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Kubernetes configuration consists of the standard objects needed for deploying an application to the cluster&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-qa
+  labels:
+    app: app-qa
+    env: qa
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: app-qa
+      env: qa
+  template:
+    metadata:
+      labels:
+        app: app-qa
+        env: qa
+    spec:
+      containers:
+        - name: app-qa
+          image: ${APP_IMAGE}
+          imagePullPolicy: &amp;quot;IfNotPresent&amp;quot;
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: qa
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-qa
+  labels:
+    app: app-qa
+    env: qa
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      nodePort: 31000
+  selector:
+    app: app-qa
+    env: qa&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When the above configuration is applied then Kubernetes only updates these object that did change. So in case of successive deployment, only &lt;code class=&quot;language-text&quot;&gt;Deployment&lt;/code&gt; object is updated which represents our application. &lt;code class=&quot;language-text&quot;&gt;revisionHistoryLimit&lt;/code&gt; is an extra configuration which keeps previous &lt;code class=&quot;language-text&quot;&gt;Deployment&lt;/code&gt; object just in case if rollback is necessary.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Accessing HTTP request data from outside of calling thread]]></title><description><![CDATA[It’s almost end of 2019 but there is still a lot of application which depends on Servlet specification - this statement is base on my…]]></description><link>https://ajurasz.github.io/2019-12-28-accessing-request-data-from-outside-of-calling-thread/</link><guid isPermaLink="false">https://ajurasz.github.io/2019-12-28-accessing-request-data-from-outside-of-calling-thread/</guid><pubDate>Sat, 28 Dec 2019 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;It’s almost end of 2019 but there is still a lot of application which depends on Servlet specification - this statement is base on my personal experience where I still see the majority of a new application being built using this technology. In this blog post, I will focus on a single use case where we will retrieve HTTP request data from outside of calling thread in &lt;code class=&quot;language-text&quot;&gt;Spring Framework&lt;/code&gt;.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;h2&gt;Problem&lt;/h2&gt;
 &lt;p&gt;When using &lt;code class=&quot;language-text&quot;&gt;spring-webmvc&lt;/code&gt; in a standard way - according to Servlet 2.5 specification - then every incoming request is bound to a single thread for a life of that request (calling thread). Everything is fine until you start to do some &lt;em&gt;side processing in child thread&lt;/em&gt;. This is a common case when moving to less coupled communicating between modules in an application through Spring’s event bus. &lt;/p&gt;
