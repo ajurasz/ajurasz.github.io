@@ -118,4 +118,6 @@ When the function was deployed we can give it a try in Lambda console.
 
 ![Lambda function output 2](./lambda-function-output-2.png)
 
-Please notice time difference between these two functions - native executable is 11 times faster and if it comes to deployment package size it's 30% smaller (24 MB instead of 34 MB).
+Please notice time difference between these two functions, native executable is 11 times faster. If it comes to deployment package size it's 30% smaller (24 MB instead of 34 MB).
+
+Source code can be found [here](https://github.com/ajurasz/lambda-custom-runtime).
