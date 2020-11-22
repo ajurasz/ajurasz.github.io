@@ -1,4 +1,198 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Wed, 18 Nov 2020 18:47:23 GMT</lastBuildDate><item><title><![CDATA[Managing schema evolution in the serverless stack]]></title><description><![CDATA[Looking on some of the AWS efforts around RDS service it won’t be an incorrect statement to say that they want to bring the world of…]]></description><link>https://ajurasz.github.io/2020-11-17-manage-schema-evolution-in-the-serverless-stack/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-11-17-manage-schema-evolution-in-the-serverless-stack/</guid><pubDate>Tue, 17 Nov 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Looking on some of the AWS efforts around RDS service it won’t be an incorrect statement to say that they want to bring the world of relational databases closer to Lambda functions. First, &lt;a href=&quot;https://aws.amazon.com/rds/aurora/serverless/&quot;&gt;Aurora Serverless&lt;/a&gt; was &lt;a href=&quot;https://aws.amazon.com/blogs/aws/aurora-serverless-ga/&quot;&gt;announced&lt;/a&gt; then less than a year later this revolutionary service was extended by &lt;a href=&quot;https://aws.amazon.com/blogs/aws/new-data-api-for-amazon-aurora-serverless/&quot;&gt;Data API&lt;/a&gt; where interaction with DB is done through API endpoint. But this is not an end, the next year has come and we got &lt;a href=&quot;https://aws.amazon.com/blogs/aws/amazon-rds-proxy-now-generally-available/&quot;&gt;RDS proxy&lt;/a&gt; whose main task is to help improve applications scalability by managing DB connections.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sun, 22 Nov 2020 23:04:41 GMT</lastBuildDate><item><title><![CDATA[AWS Lambda custom runtime]]></title><description><![CDATA[AWS Lambda support many build in runtimes. But we also have a possibility to create custom runtimes to run functions in a language that is…]]></description><link>https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</guid><pubDate>Mon, 23 Nov 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;AWS Lambda support many &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html&quot;&gt;build in runtimes&lt;/a&gt;. But we also have a possibility to create custom runtimes to run functions in a language that is not yet supported by Lambda service or when we need to do some extra optimization (i.e. reduce startup time or memory footprint of functions build for JVM). Today we will learn how to build a very simple runtime focusing mainly on steps required to do so.&lt;/p&gt;
+&lt;!-- end --&gt;
+&lt;h2&gt;Custom runtime&lt;/h2&gt;
+&lt;p&gt;Every runtime is executed on Amazon Linux or Amazon Linux 2 operating system. In case of JVM, functions need at least a Java Runtime Environment (JRE) to run a &lt;code class=&quot;language-text&quot;&gt;jar&lt;/code&gt; but it won’t be available out of the box on mentioned systems. Thankfully starting from Java 9 a &lt;code class=&quot;language-text&quot;&gt;jlink&lt;/code&gt; tool was introduced which creates a customized JRE that contains only these modules that are required by your own module - this way JRE can be part of the deployment package.&lt;/p&gt;
+&lt;p&gt;To create a runtime we need a &lt;code class=&quot;language-text&quot;&gt;bootstrap&lt;/code&gt; file to be present in the root of a deployment package. This file is an entry point for the custom runtime and will be called by Lambda as part of &lt;code class=&quot;language-text&quot;&gt;init&lt;/code&gt; phase.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/f60c089ea1f585cd0857a47ec3dbe386/29007/lambda-execution-environment-lifecycle.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 18.857142857142858%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAECAIAAAABPYjBAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAx0lEQVQI1x2Ku04DMRRE9///BdGGiFRQ0CAR0YAikrAgwq7j+HFt34fXNg6jU5wZzTAHmDwoi8ZDDFNKltBSOl/pQoGSIuxVs5CPcrakIE7gXUrD3fh+fxgft3H3cdSH26SfG77SvOq0uG10XPQ6/q6re2gN9z+yeZo2u/Hm7eXTm8EIGmZlGEIsrEr2dYHgvju1e0EKJ2e+CuvWCnKdLzgqfQKHWYZFck+IAYk5V5I+VOuj9YmlsCwQSVugq2f5f+qLSQlZ5A8imOChMNa4bwAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;Lambda execution environment lifecycle&quot;
+        title=&quot;&quot;
+        src=&quot;/static/f60c089ea1f585cd0857a47ec3dbe386/8c557/lambda-execution-environment-lifecycle.png&quot;
+        srcset=&quot;/static/f60c089ea1f585cd0857a47ec3dbe386/4edbd/lambda-execution-environment-lifecycle.png 175w,
+/static/f60c089ea1f585cd0857a47ec3dbe386/13ae7/lambda-execution-environment-lifecycle.png 350w,
+/static/f60c089ea1f585cd0857a47ec3dbe386/8c557/lambda-execution-environment-lifecycle.png 700w,
+/static/f60c089ea1f585cd0857a47ec3dbe386/e996b/lambda-execution-environment-lifecycle.png 1050w,
+/static/f60c089ea1f585cd0857a47ec3dbe386/2cefc/lambda-execution-environment-lifecycle.png 1400w,
+/static/f60c089ea1f585cd0857a47ec3dbe386/29007/lambda-execution-environment-lifecycle.png 1600w&quot;
+        sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Source: &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html&quot;&gt;https://docs.aws.amazon.com/lambda/latest/dg/runtimes-context.html&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Deployment package&lt;/h2&gt;
+&lt;p&gt;So far we know that custom runtime will require a &lt;code class=&quot;language-text&quot;&gt;bootstrap&lt;/code&gt; file and custom JRE. Since we will be working with (&lt;a href=&quot;https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html&quot;&gt;SAM CLI&lt;/a&gt;) we can use the possibility to customize &lt;code class=&quot;language-text&quot;&gt;build&lt;/code&gt; command. This can be done by providing &lt;code class=&quot;language-text&quot;&gt;Metadata&lt;/code&gt; resource attribute with a &lt;code class=&quot;language-text&quot;&gt;BuildMethod: makefile&lt;/code&gt; entry&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;yml&quot;&gt;&lt;pre class=&quot;language-yml&quot;&gt;&lt;code class=&quot;language-yml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;Resources&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;NaiveJavaRuntimeFunction&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;Type&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; AWS&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;Serverless&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;Function
+    &lt;span class=&quot;token key atrule&quot;&gt;Properties&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token key atrule&quot;&gt;CodeUri&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; NaiveJavaRuntime
+      &lt;span class=&quot;token key atrule&quot;&gt;Handler&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; do.not.apply
+      &lt;span class=&quot;token key atrule&quot;&gt;Runtime&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; provided
+      &lt;span class=&quot;token key atrule&quot;&gt;MemorySize&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;128&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;Metadata&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token key atrule&quot;&gt;BuildMethod&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; makefile&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By convention &lt;code class=&quot;language-text&quot;&gt;sam build&lt;/code&gt; will look for &lt;code class=&quot;language-text&quot;&gt;build-NaiveJavaRuntimeFunction&lt;/code&gt; target in a &lt;code class=&quot;language-text&quot;&gt;Makefile&lt;/code&gt;. &lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;text&quot;&gt;&lt;pre class=&quot;language-text&quot;&gt;&lt;code class=&quot;language-text&quot;&gt;build-NaiveJavaRuntimeFunction:
+  @ mvn clean package
+  @ chmod +x ./target/classes/bootstrap
+  @ cp -rf ./target/classes/bootstrap $(ARTIFACTS_DIR)
+  @ jlink --module-path ./target/naive-java-runtime.jar:$(JAVA_HOME)/jmods \
+         --add-modules  naive.java.runtime \
+         --output ./target/dist \
+         --launcher executable=naive.java.runtime/io.github.ajurasz.naivejavaruntime.Bootstrap \
+         --compress 2 --no-header-files --no-man-pages --strip-debug
+  @ cp -rf ./target/dist $(ARTIFACTS_DIR)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Here’s what is happening:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Build package using maven&lt;/li&gt;
+&lt;li&gt;Change &lt;code class=&quot;language-text&quot;&gt;bootstrap&lt;/code&gt; file permission&lt;/li&gt;
+&lt;li&gt;Copy &lt;code class=&quot;language-text&quot;&gt;bootstrap&lt;/code&gt; file (which is part of project resources) to &lt;code class=&quot;language-text&quot;&gt;ARTIFACTS_DIR&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Build custom JRE. Notice &lt;code class=&quot;language-text&quot;&gt;--launcher&lt;/code&gt; option which will create an executable file (&lt;code class=&quot;language-text&quot;&gt;dist/bin/executable&lt;/code&gt;) which when called will run the main method&lt;/li&gt;
+&lt;li&gt;Copy output created by &lt;code class=&quot;language-text&quot;&gt;jlink&lt;/code&gt; to &lt;code class=&quot;language-text&quot;&gt;ARTIFACTS_DIR&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;At the end &lt;code class=&quot;language-text&quot;&gt;ARTIFACTS_DIR&lt;/code&gt; will look like this:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;shell&quot;&gt;&lt;pre class=&quot;language-shell&quot;&gt;&lt;code class=&quot;language-shell&quot;&gt;&lt;span class=&quot;token builtin class-name&quot;&gt;.&lt;/span&gt;
+├── bootstrap
+└── dist
+    ├── bin
+    │   ├── executable
+    │   ├── java
+    │   └── keytool
+    ├── conf
+    │   ├── net.properties
+    │   └── security
+    ├── legal
+    │   ├── java.base
+    │   └── java.net.http
+    ├── lib
+    │   ├── classlist
+    │   ├── jexec
+    │   ├── jli
+    │   ├── jrt-fs.jar
+    │   ├── jspawnhelper
+    │   ├── jvm.cfg
+    │   ├── libjava.so
+    │   ├── libjimage.so
+    │   ├── libjsig.so
+    │   ├── libnet.so
+    │   ├── libnio.so
+    │   ├── libverify.so
+    │   ├── libzip.so
+    │   ├── modules
+    │   ├── security
+    │   ├── server
+    │   └── tzdb.dat
+    └── release&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;When the function was deployed we can give it a try in Lambda console.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/c15081c31a4d6f0ea43beb009be77521/d004c/lambda-function-output.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 37.14285714285714%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAAC4jAAAuIwF4pT92AAABGElEQVQoz22Rx5LEIAxE/f8fOTsBB0wOBmwfepAm1FbtHl4JtYJNMwh1xW3+wbjecF8f0HGFzYSCTStj0iv3m4Z743/BedHcMygvIfUCnyxctAjZwRMlvmJyXNtaQj0L6rEx5R9yixhWN2NWI0JxjN8sUgvI+4fYGwNM7H+YDVyH+khLf/AYpJswKcEDpl+XCMVyMVb3jULeueYyXdOw/iE2xz0EL5y1QKi0xH2LtJQGCVoydn+n3qeD7HZ0e0h/+0ezn48Pi5lwuV4wzgJiemBcRoj5wb4qu7KHIXuE5OHjy9OwJcQOaVSrR/d2L4jdisEEhUVKKK2hjYYxhs85Z9RasR870/aG8zw7B1prOCh2jel5KYUf9Al3HRYl6YsobgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;Lambda function output&quot;
+        title=&quot;&quot;
+        src=&quot;/static/c15081c31a4d6f0ea43beb009be77521/8c557/lambda-function-output.png&quot;
+        srcset=&quot;/static/c15081c31a4d6f0ea43beb009be77521/4edbd/lambda-function-output.png 175w,
+/static/c15081c31a4d6f0ea43beb009be77521/13ae7/lambda-function-output.png 350w,
+/static/c15081c31a4d6f0ea43beb009be77521/8c557/lambda-function-output.png 700w,
+/static/c15081c31a4d6f0ea43beb009be77521/e996b/lambda-function-output.png 1050w,
+/static/c15081c31a4d6f0ea43beb009be77521/2cefc/lambda-function-output.png 1400w,
+/static/c15081c31a4d6f0ea43beb009be77521/d004c/lambda-function-output.png 1611w&quot;
+        sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;h2&gt;Runtime&lt;/h2&gt;
+&lt;p&gt;Beside initialization, custom runtime is also responsible for &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html#runtimes-custom-build&quot;&gt;processing tasks&lt;/a&gt; consisting of:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Getting an event&lt;/li&gt;
+&lt;li&gt;Propagating the tracing header&lt;/li&gt;
+&lt;li&gt;Creating a context object&lt;/li&gt;
+&lt;li&gt;Invoking the function handler&lt;/li&gt;
+&lt;li&gt;Handling the response&lt;/li&gt;
+&lt;li&gt;Handling errors&lt;/li&gt;
+&lt;li&gt;Cleanup&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;My naive implementation meets just three of these tasks. To support all of them it would require much more development and then the maintenance of that code. But there is a better alternative to reinventing the wheel - taking advantage of very impressive &lt;a href=&quot;https://quarkus.io/guides/funqy-amazon-lambda&quot;&gt;Quarkus module&lt;/a&gt;. Except that it provides an implementation for all processing tasks it also gives the possibility to build a native image which additionally lower memory footprint and accelerates initialization times. All this can be done with small adjustments to &lt;a href=&quot;https://github.com/ajurasz/lambda-custom-runtime/blob/master/FunqyAmazonLambda/pom.xml&quot;&gt;pom.xml&lt;/a&gt;. &lt;/p&gt;
+&lt;p&gt;When the function was deployed we can give it a try in Lambda console.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/1a57f36b47e77e7f875768909e73192d/12e1b/lambda-function-output-2.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 37.14285714285714%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAHCAYAAAAIy204AAAACXBIWXMAAC4jAAAuIwF4pT92AAABHUlEQVQoz3XQ6W7DIAwA4Lz/Q3Zrl5NgsDkasiF7DksqTdp+fPIphNz161u5j7fSm3t5mEexYSkumQJpLRDNi9PaZ/svfNq200EwsjojIaNQwlekLQpdefLy3JPsdZPy9Wy2P+TPKN3iRh5Nz5gdY4IW0x4UtZjP3KJhHy07RcdOIY6ndIoFuTN+khlGcXE9WQmbFx3+ioP5EAir+GT159D6l2N+6RY/8gQD0xNYG8oxKdS6yZb1EdYHebQ964m079hnaH29X9sPjefu+N3t/SbGLrLYWVYwsqyzWG8FVEgkMQe9LQlF/Km3rFLrHbP9a9P7Fsm73hDI1GEY6jRNdVTzPLcaAKrzroYQKhFWPCBqTg1ePeXR1xhTjVuo34hWFHZBQnGHAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;Lambda function output 2&quot;
+        title=&quot;&quot;
+        src=&quot;/static/1a57f36b47e77e7f875768909e73192d/8c557/lambda-function-output-2.png&quot;
+        srcset=&quot;/static/1a57f36b47e77e7f875768909e73192d/4edbd/lambda-function-output-2.png 175w,
+/static/1a57f36b47e77e7f875768909e73192d/13ae7/lambda-function-output-2.png 350w,
+/static/1a57f36b47e77e7f875768909e73192d/8c557/lambda-function-output-2.png 700w,
+/static/1a57f36b47e77e7f875768909e73192d/e996b/lambda-function-output-2.png 1050w,
+/static/1a57f36b47e77e7f875768909e73192d/2cefc/lambda-function-output-2.png 1400w,
+/static/1a57f36b47e77e7f875768909e73192d/12e1b/lambda-function-output-2.png 1607w&quot;
+        sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;Please notice time difference between these two functions - native executable is 11 times faster and if it comes to deployment package size it’s 30% smaller (24 MB instead of 34 MB).&lt;/p&gt;</content:encoded></item><item><title><![CDATA[Managing schema evolution in the serverless stack]]></title><description><![CDATA[Looking on some of the AWS efforts around RDS service it won’t be an incorrect statement to say that they want to bring the world of…]]></description><link>https://ajurasz.github.io/2020-11-17-manage-schema-evolution-in-the-serverless-stack/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-11-17-manage-schema-evolution-in-the-serverless-stack/</guid><pubDate>Tue, 17 Nov 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Looking on some of the AWS efforts around RDS service it won’t be an incorrect statement to say that they want to bring the world of relational databases closer to Lambda functions. First, &lt;a href=&quot;https://aws.amazon.com/rds/aurora/serverless/&quot;&gt;Aurora Serverless&lt;/a&gt; was &lt;a href=&quot;https://aws.amazon.com/blogs/aws/aurora-serverless-ga/&quot;&gt;announced&lt;/a&gt; then less than a year later this revolutionary service was extended by &lt;a href=&quot;https://aws.amazon.com/blogs/aws/new-data-api-for-amazon-aurora-serverless/&quot;&gt;Data API&lt;/a&gt; where interaction with DB is done through API endpoint. But this is not an end, the next year has come and we got &lt;a href=&quot;https://aws.amazon.com/blogs/aws/amazon-rds-proxy-now-generally-available/&quot;&gt;RDS proxy&lt;/a&gt; whose main task is to help improve applications scalability by managing DB connections.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;p&gt;All these improvements show us that relational databases are relevant for serverless applications otherwise AWS wouldn’t put such a big effort in helping developers writing more efficient Lambda functions while working with RDS service.&lt;/p&gt;
 &lt;p&gt;The main purpose of this introduction was to defend the topic of this blog post - &lt;strong&gt;managing schema evolution in the serverless stack&lt;/strong&gt; - which I hope doesn’t sound too abstract now. As befits a Java developer I could not resist bringing my own toolset to face the issue. The toolset consists of Java 11, Maven and Flyway.&lt;/p&gt;
@@ -48,7 +242,7 @@ sam deploy --stack-name &lt;span class=&quot;token variable&quot;&gt;$STACK_NAME
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/256ae5773ad607054c4b3c169f385da7/f1d59/flyless-architecture.png&quot;
+    href=&quot;/static/256ae5773ad607054c4b3c169f385da7/01dae/flyless-architecture.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -60,18 +254,18 @@ sam deploy --stack-name &lt;span class=&quot;token variable&quot;&gt;$STACK_NAME
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 103.19001386962552%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAVCAYAAABG1c6oAAAACXBIWXMAAAsSAAALEgHS3X78AAAD40lEQVQ4y21US4tcRRTu3+BvEFy40oUbVwr+iYgbdwpuhIBEUXyRIAEhGASN8RE3BiKjwowZZ4Yw0zMuJDIPkmmmp3N7uu+t+34/6r4/T1Xf7umYFBxO3bpfnfrOOV9V79rOF+AFR15x8Grm8yrvPFmZIUeDbLSLeO0yeMiQNxWtL2PzxbxX0c+njnbuZ5Ni6zqSyy+jmR52681Tt/VE5PngxGZ+QCtjtbRvtpG7Gsx/ViXjBUb8/5/JgG3HYvV4BX3lHia+ApXtw80cuKkNJzFRdIfePVnF9mgDU38sceK/m1oSU9alCJgvGAaZCzU1YN//BfzG63AGf0EnsJGa4OwBqn9XEEQMWjSFHpJFKoxIkybmRV2gJ9JsRFpEMsw8MApg7a/AvfEmzMEG9MSAmXsID9fg3HwLvquAJToFUReBhGd0QFFTU1qcF7eoEvicUiCmw9N96T1Kyecu4siDzYhFFUuMWPeycy/SrkTKt3/7Ax98ehX3dvbg5S38tCDGLUmgRl6U1IRK+pK+xTDiAn5WoiZMWbfUoFbOhZdNefvi+3j2hVdw9cuvsKWE2DyxMHRSPHRLaCGHHueUVk4KEJ1t8OfAwubQxqnAmDFUwhiEYYQp6ga9W7fv4N1Ln2Fja5sECzDDhzHVYB3sgukOmB1SE3LJuKlrEn8jD2CdiUOFicAF/esNRkOsb+7AskkiSQaFTnW3f0J98wI1Zx3MK6jgmQzYUsCAV5gGfBFsObBkePGjz/H8S6/h+jc/IqOanOkB1MM+zDsfQ1NOoNsxbeCylm1VIswryYYtsXws4HufXMFzL76Ka19/h4yko0xM3D9WsHswwNFIg2b6klHeicHnNc78TAYV68LEfCIwImXbc6BqOtI0kxtSStvRTbCJCocZiFKOkPpRmiOU+7+jJd2mVYuYmMZFhYi8YB1SKUSne1VbLnR4xEKcBTli2uCSNDgxzqsKAhEfrMMjsR+dnmEclEgoSMBLZGUtUxXsGiEbTs+Q0J0Y24qH3aGJCXX6kUosLR+al4DFJfwgRGhq2Bk56I89DO1Eykakr3Xpy5TP73KLjBZCL8Ta38e49MMeHkx8mBRUDXOUXQ1zYmOS7ozOnmjK8uNgJwWiOMMbH36PZy7cws/9CTwvwFRqrJaHilsiZdPpby6dhQ7P38OW7mQBx4vwa/8h3vl2DwdaTAw9Cc67qyfqNg0yKSVtKegc0xMXej6iooWmuZhQ/ZSxiqlmw7BCqqHo4AwTk360sKArWdKNOTdGJjA9O7Go9SEiHsBJfei+hbE2xqOpgok+gRm5VCuPUg0I12Ho5RFrj1k0w/wHRMkiKDsRN4cAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 103.42857142857143%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAVCAYAAABG1c6oAAAACXBIWXMAAAsSAAALEgHS3X78AAAD40lEQVQ4y21US4tcRRTu3+BvEFy40oUbVwr+iYgbdwpuhIBEUXyRIAEhGASN8RE3BiKjwowZZ4Yw0zMuJDIPkmmmp3N7uu+t+34/6r4/T1Xf7umYFBxO3bpfnfrOOV9V79rOF+AFR15x8Grm8yrvPFmZIUeDbLSLeO0yeMiQNxWtL2PzxbxX0c+njnbuZ5Ni6zqSyy+jmR52681Tt/VE5PngxGZ+QCtjtbRvtpG7Gsx/ViXjBUb8/5/JgG3HYvV4BX3lHia+ApXtw80cuKkNJzFRdIfePVnF9mgDU38sceK/m1oSU9alCJgvGAaZCzU1YN//BfzG63AGf0EnsJGa4OwBqn9XEEQMWjSFHpJFKoxIkybmRV2gJ9JsRFpEMsw8MApg7a/AvfEmzMEG9MSAmXsID9fg3HwLvquAJToFUReBhGd0QFFTU1qcF7eoEvicUiCmw9N96T1Kyecu4siDzYhFFUuMWPeycy/SrkTKt3/7Ax98ehX3dvbg5S38tCDGLUmgRl6U1IRK+pK+xTDiAn5WoiZMWbfUoFbOhZdNefvi+3j2hVdw9cuvsKWE2DyxMHRSPHRLaCGHHueUVk4KEJ1t8OfAwubQxqnAmDFUwhiEYYQp6ga9W7fv4N1Ln2Fja5sECzDDhzHVYB3sgukOmB1SE3LJuKlrEn8jD2CdiUOFicAF/esNRkOsb+7AskkiSQaFTnW3f0J98wI1Zx3MK6jgmQzYUsCAV5gGfBFsObBkePGjz/H8S6/h+jc/IqOanOkB1MM+zDsfQ1NOoNsxbeCylm1VIswryYYtsXws4HufXMFzL76Ka19/h4yko0xM3D9WsHswwNFIg2b6klHeicHnNc78TAYV68LEfCIwImXbc6BqOtI0kxtSStvRTbCJCocZiFKOkPpRmiOU+7+jJd2mVYuYmMZFhYi8YB1SKUSne1VbLnR4xEKcBTli2uCSNDgxzqsKAhEfrMMjsR+dnmEclEgoSMBLZGUtUxXsGiEbTs+Q0J0Y24qH3aGJCXX6kUosLR+al4DFJfwgRGhq2Bk56I89DO1Eykakr3Xpy5TP73KLjBZCL8Ta38e49MMeHkx8mBRUDXOUXQ1zYmOS7ozOnmjK8uNgJwWiOMMbH36PZy7cws/9CTwvwFRqrJaHilsiZdPpby6dhQ7P38OW7mQBx4vwa/8h3vl2DwdaTAw9Cc67qyfqNg0yKSVtKegc0xMXej6iooWmuZhQ/ZSxiqlmw7BCqqHo4AwTk360sKArWdKNOTdGJjA9O7Go9SEiHsBJfei+hbE2xqOpgok+gRm5VCuPUg0I12Ho5RFrj1k0w/wHRMkiKDsRN4cAAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;Flyless architecture&quot;
         title=&quot;&quot;
-        src=&quot;/static/256ae5773ad607054c4b3c169f385da7/69344/flyless-architecture.png&quot;
-        srcset=&quot;/static/256ae5773ad607054c4b3c169f385da7/17006/flyless-architecture.png 175w,
-/static/256ae5773ad607054c4b3c169f385da7/d6f3f/flyless-architecture.png 350w,
-/static/256ae5773ad607054c4b3c169f385da7/69344/flyless-architecture.png 700w,
-/static/256ae5773ad607054c4b3c169f385da7/f1d59/flyless-architecture.png 721w&quot;
+        src=&quot;/static/256ae5773ad607054c4b3c169f385da7/8c557/flyless-architecture.png&quot;
+        srcset=&quot;/static/256ae5773ad607054c4b3c169f385da7/4edbd/flyless-architecture.png 175w,
+/static/256ae5773ad607054c4b3c169f385da7/13ae7/flyless-architecture.png 350w,
+/static/256ae5773ad607054c4b3c169f385da7/8c557/flyless-architecture.png 700w,
+/static/256ae5773ad607054c4b3c169f385da7/01dae/flyless-architecture.png 721w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -229,7 +423,7 @@ To have better control over what event will trigger the function or which enviro
             environment {
                 DOCKER_REPOSITORY = &amp;#39;127.0.0.1:5000&amp;#39;
                 IMAGE_NAME = &amp;#39;app&amp;#39;
-                IMAGE_TAG = sh(script: &amp;quot;git log -1 --pretty=%h&amp;quot;undefined returnStdout: true).trim()
+                IMAGE_TAG = sh(script: &amp;quot;git log -1 --pretty=%h&amp;quot;, returnStdout: true).trim()
                 APP_IMAGE = &amp;quot;${DOCKER_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}&amp;quot;
             }
 
@@ -242,7 +436,7 @@ To have better control over what event will trigger the function or which enviro
                 docker push ${APP_IMAGE}
                 &amp;quot;&amp;quot;&amp;quot;
 
-                kubernetesDeploy(kubeconfigId: &amp;#39;k8s-config&amp;#39;undefined configs: &amp;#39;**/k8s/qa/app.yml&amp;#39;)
+                kubernetesDeploy(kubeconfigId: &amp;#39;k8s-config&amp;#39;, configs: &amp;#39;**/k8s/qa/app.yml&amp;#39;)
             }
 
             post {
@@ -436,7 +630,7 @@ spec:
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;groovy&quot;&gt;&lt;pre class=&quot;language-groovy&quot;&gt;&lt;code class=&quot;language-groovy&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;ApplicationEventSpec&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;Specification&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
 	&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token string gstring&quot;&gt;&quot;should recognize equal objects&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
 		&lt;span class=&quot;token spock-block&quot;&gt;given:&lt;/span&gt;
-		&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; correlationId &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; UUID&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;randomUUID&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; correlationId &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; UUID&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;randomUUID&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 		
 		&lt;span class=&quot;token spock-block&quot;&gt;expect:&lt;/span&gt;
 		&lt;span class=&quot;token keyword&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;ApplicationEvent&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;correlationId&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;ApplicationEvent&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;correlationId&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token comment&quot;&gt;// true&lt;/span&gt;
@@ -503,7 +697,7 @@ Problem is with the way how &lt;code class=&quot;language-text&quot;&gt;Micronau
 in the above example, &lt;code class=&quot;language-text&quot;&gt;Micronaut&lt;/code&gt; application will be started/stopped twice. This can be fixed simply by not using &lt;code class=&quot;language-text&quot;&gt;@MicronautTest&lt;/code&gt; annotation, i.e.:&lt;/p&gt;
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;groovy&quot;&gt;&lt;pre class=&quot;language-groovy&quot;&gt;&lt;code class=&quot;language-groovy&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;IntegrationSpecificationBase&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;Specification&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;TestPropertyProvider&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;token annotation punctuation&quot;&gt;@AutoCleanup&lt;/span&gt;
-    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;static&lt;/span&gt; EmbeddedServer embeddedServer &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; ApplicationContext&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;static&lt;/span&gt; EmbeddedServer embeddedServer &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; ApplicationContext&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
             EmbeddedServer&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
             &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; Map&lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;String&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; Object&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
             &lt;span class=&quot;token string gstring&quot;&gt;&quot;it&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
@@ -524,23 +718,23 @@ be to start all required docker containers before starting &lt;code class=&quot;
 &lt;p&gt;Following example shows how to start all defined containers by using global extension:&lt;/p&gt;
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;groovy&quot;&gt;&lt;pre class=&quot;language-groovy&quot;&gt;&lt;code class=&quot;language-groovy&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;DockerInfrastructureRunner&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;AbstractGlobalExtension&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;final&lt;/span&gt; Collection&lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;GenericContainer&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; containers &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;
-            MySqlContainer&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;MY_SQL_CONTAINER
+            MySqlContainer&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;MY_SQL_CONTAINER
     &lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
 
     &lt;span class=&quot;token annotation punctuation&quot;&gt;@Override&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-        containers&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;each &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;!&lt;/span&gt;it&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;isRunning&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-                it&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        containers&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;each &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;!&lt;/span&gt;it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;isRunning&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+                it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
             &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
         &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
     &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
 
     &lt;span class=&quot;token annotation punctuation&quot;&gt;@Override&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-        containers&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;each &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;it&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;isRunning&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-                it&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        containers&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;each &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;isRunning&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+                it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
             &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
         &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
     &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
@@ -551,11 +745,11 @@ be to start all required docker containers before starting &lt;code class=&quot;
 &lt;p&gt;We can also take advantage of some groovy goodness and declare and start docker container in one go like:&lt;/p&gt;
 &lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;groovy&quot;&gt;&lt;pre class=&quot;language-groovy&quot;&gt;&lt;code class=&quot;language-groovy&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;MySqlContainer&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;final&lt;/span&gt; GenericContainer MY_SQL_CONTAINER &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;GenericContainer&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string gstring&quot;&gt;&quot;mysql:8&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withEnv&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string gstring&quot;&gt;&quot;MYSQL_ROOT_PASSWORD&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string gstring&quot;&gt;&quot;password&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withEnv&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string gstring&quot;&gt;&quot;MYSQL_DATABASE&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string gstring&quot;&gt;&quot;it&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withExposedPorts&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;3306&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;with &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-                it&lt;span class=&quot;token operator&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withEnv&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string gstring&quot;&gt;&quot;MYSQL_ROOT_PASSWORD&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string gstring&quot;&gt;&quot;password&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withEnv&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string gstring&quot;&gt;&quot;MYSQL_DATABASE&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string gstring&quot;&gt;&quot;it&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;withExposedPorts&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;3306&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;with &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+                it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
                 it
             &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -659,11 +853,11 @@ sdk &lt;span class=&quot;token function&quot;&gt;install&lt;/span&gt; java &lt;s
 &lt;span class=&quot;token function&quot;&gt;sudo&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;apt&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;install&lt;/span&gt; libz-dev&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;h2&gt;Code&lt;/h2&gt;
 &lt;p&gt;As shown above, we want to pipe output from &lt;code class=&quot;language-text&quot;&gt;curl&lt;/code&gt; command to our application as input. To get access to this input from application level we need to read it from &lt;code class=&quot;language-text&quot;&gt;System.in&lt;/code&gt;. &lt;a href=&quot;https://github.com/json-path/JsonPath&quot;&gt;JsonPath&lt;/a&gt; expression will be simply passed as an argument. In the end, we just need to evaluate the expression against received json. &lt;/p&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;java&quot;&gt;&lt;pre class=&quot;language-java&quot;&gt;&lt;code class=&quot;language-java&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;io&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;BufferedReader&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;io&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;InputStreamReader&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;util&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;stream&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;Collectors&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;java&quot;&gt;&lt;pre class=&quot;language-java&quot;&gt;&lt;code class=&quot;language-java&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;io&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;BufferedReader&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;io&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;InputStreamReader&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;java&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;util&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;stream&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;Collectors&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 
-&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;com&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;jayway&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;jsonpath&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;JsonPath&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;token namespace&quot;&gt;com&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;jayway&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;jsonpath&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;JsonPath&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 
 &lt;span class=&quot;token keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;Application&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token class-name&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt; args&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
@@ -1038,7 +1232,7 @@ Caused by: java.lang.IllegalAccessError: class com.example.demo.PointcutedHelloC
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/bbf863545b228772548aee63cf3863d0/90706/wlp-classloaders.png&quot;
+    href=&quot;/static/bbf863545b228772548aee63cf3863d0/5f7fb/wlp-classloaders.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1050,20 +1244,20 @@ Caused by: java.lang.IllegalAccessError: class com.example.demo.PointcutedHelloC
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 41.82106934886183%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAIAAAB2/0i6AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAA+klEQVQY032OiW6EIBRF/f8vVOpalhEdwGEbUJAqZtqmaXsSCMu7S6EmPFJ8u49KK++8y4SwpZSc5AKhBxdGKZNZ/er9sdYtDxSGjWKatbH7vqdP8tlrITBiXFhjX89fZDFFDGMl5eF3GZ84d5g7xQXBUsozM+NfxBCzeGjmslqmKYRwGsa8hXg4r3phGGprj68fyde1CP7ptI4xpu9ctSXjfSfuzGid21ydnHu6y65Iv5LFm5Z86GcICUQjpQQTjAmCiCCstP5bnNlWz+ltplP/Vg9N24G6rUBTgq5pHw/5j/hMDtYscOCI4AqQukEVeC8rWALUD0qdyR8UAsyHX1iO4gAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 41.714285714285715%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAICAIAAAB2/0i6AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAA+klEQVQY032OiW6EIBRF/f8vVOpalhEdwGEbUJAqZtqmaXsSCMu7S6EmPFJ8u49KK++8y4SwpZSc5AKhBxdGKZNZ/er9sdYtDxSGjWKatbH7vqdP8tlrITBiXFhjX89fZDFFDGMl5eF3GZ84d5g7xQXBUsozM+NfxBCzeGjmslqmKYRwGsa8hXg4r3phGGprj68fyde1CP7ptI4xpu9ctSXjfSfuzGid21ydnHu6y65Iv5LFm5Z86GcICUQjpQQTjAmCiCCstP5bnNlWz+ltplP/Vg9N24G6rUBTgq5pHw/5j/hMDtYscOCI4AqQukEVeC8rWALUD0qdyR8UAsyHX1iO4gAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;wlp-classloaders&quot;
         title=&quot;&quot;
-        src=&quot;/static/bbf863545b228772548aee63cf3863d0/69344/wlp-classloaders.png&quot;
-        srcset=&quot;/static/bbf863545b228772548aee63cf3863d0/17006/wlp-classloaders.png 175w,
-/static/bbf863545b228772548aee63cf3863d0/d6f3f/wlp-classloaders.png 350w,
-/static/bbf863545b228772548aee63cf3863d0/69344/wlp-classloaders.png 700w,
-/static/bbf863545b228772548aee63cf3863d0/b1f9d/wlp-classloaders.png 1050w,
-/static/bbf863545b228772548aee63cf3863d0/3fc71/wlp-classloaders.png 1400w,
-/static/bbf863545b228772548aee63cf3863d0/90706/wlp-classloaders.png 1889w&quot;
+        src=&quot;/static/bbf863545b228772548aee63cf3863d0/8c557/wlp-classloaders.png&quot;
+        srcset=&quot;/static/bbf863545b228772548aee63cf3863d0/4edbd/wlp-classloaders.png 175w,
+/static/bbf863545b228772548aee63cf3863d0/13ae7/wlp-classloaders.png 350w,
+/static/bbf863545b228772548aee63cf3863d0/8c557/wlp-classloaders.png 700w,
+/static/bbf863545b228772548aee63cf3863d0/e996b/wlp-classloaders.png 1050w,
+/static/bbf863545b228772548aee63cf3863d0/2cefc/wlp-classloaders.png 1400w,
+/static/bbf863545b228772548aee63cf3863d0/5f7fb/wlp-classloaders.png 1889w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1167,9 +1361,9 @@ Caused by: java.lang.IllegalAccessError: class com.example.demo.PointcutedHelloC
             &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;phase&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;package&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;phase&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
             &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;configuration&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
                 &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;target&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
-                    &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;zip&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;destfile&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;${project.build.directory}/${app.finalName}.jar&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;
-                         &lt;span class=&quot;token attr-name&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;yes&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;compress&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;false&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
-                        &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;zipfileset&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;dir&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;.&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;includes&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;apt.yml&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;/&gt;&lt;/span&gt;&lt;/span&gt;
+                    &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;zip&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;destfile&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;${project.build.directory}/${app.finalName}.jar&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+                         &lt;span class=&quot;token attr-name&quot;&gt;update&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;yes&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;compress&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;false&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
+                        &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;zipfileset&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;dir&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;.&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;includes&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;apt.yml&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;/&gt;&lt;/span&gt;&lt;/span&gt;
                     &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;zip&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
                 &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;target&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
             &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;configuration&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
@@ -1196,7 +1390,7 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/e087ba82deeb3973414aa247f4b459e6/e3625/tweet_aws_kotlin.jpg&quot;
+    href=&quot;/static/e087ba82deeb3973414aa247f4b459e6/f0d01/tweet_aws_kotlin.jpg&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1208,17 +1402,17 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 47.16006884681583%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAJABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAECAwX/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAHZdqESD//EABYQAAMAAAAAAAAAAAAAAAAAABESIP/aAAgBAQABBQILX//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8BP//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8BP//EABgQAAIDAAAAAAAAAAAAAAAAAAABIDFB/9oACAEBAAY/AtKcf//EABwQAQACAQUAAAAAAAAAAAAAAAEAEEERITFh0f/aAAgBAQABPyHTsB55gp7Qems1/9oADAMBAAIAAwAAABDDz//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QP//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QP//EAB0QAQABAwUAAAAAAAAAAAAAAAEAETFxEEFhgbH/2gAIAQEAAT8QrqOVqEgvKzdjMMlvMb9w8Gn/2Q==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 47.42857142857142%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAJABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAECAwX/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIQAxAAAAHZdqESD//EABYQAAMAAAAAAAAAAAAAAAAAABESIP/aAAgBAQABBQILX//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8BP//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8BP//EABgQAAIDAAAAAAAAAAAAAAAAAAABIDFB/9oACAEBAAY/AtKcf//EABwQAQACAQUAAAAAAAAAAAAAAAEAEEERITFh0f/aAAgBAQABPyHTsB55gp7Qems1/9oADAMBAAIAAwAAABDDz//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQMBAT8QP//EABQRAQAAAAAAAAAAAAAAAAAAABD/2gAIAQIBAT8QP//EAB0QAQABAwUAAAAAAAAAAAAAAAEAETFxEEFhgbH/2gAIAQEAAT8QrqOVqEgvKzdjMMlvMb9w8Gn/2Q==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;tweet_aws_kotlin&quot;
         title=&quot;&quot;
-        src=&quot;/static/e087ba82deeb3973414aa247f4b459e6/e3625/tweet_aws_kotlin.jpg&quot;
-        srcset=&quot;/static/e087ba82deeb3973414aa247f4b459e6/8dc06/tweet_aws_kotlin.jpg 175w,
-/static/e087ba82deeb3973414aa247f4b459e6/f4417/tweet_aws_kotlin.jpg 350w,
-/static/e087ba82deeb3973414aa247f4b459e6/e3625/tweet_aws_kotlin.jpg 581w&quot;
+        src=&quot;/static/e087ba82deeb3973414aa247f4b459e6/f0d01/tweet_aws_kotlin.jpg&quot;
+        srcset=&quot;/static/e087ba82deeb3973414aa247f4b459e6/e52aa/tweet_aws_kotlin.jpg 175w,
+/static/e087ba82deeb3973414aa247f4b459e6/70ebb/tweet_aws_kotlin.jpg 350w,
+/static/e087ba82deeb3973414aa247f4b459e6/f0d01/tweet_aws_kotlin.jpg 581w&quot;
         sizes=&quot;(max-width: 581px) 100vw, 581px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1242,18 +1436,18 @@ cf push my-app -b https://github.com/cloudfoundry/apt-buildpack -b java_buildpac
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 50.06242197253433%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAKABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAMBBP/EABYBAQEBAAAAAAAAAAAAAAAAAAIDBP/aAAwDAQACEAMQAAAB7Lazqq65/8QAGRAAAwADAAAAAAAAAAAAAAAAAAECEBEh/9oACAEBAAEFAt2dHNN5/8QAFhEBAQEAAAAAAAAAAAAAAAAAARAR/9oACAEDAQE/AQyf/8QAFxEBAAMAAAAAAAAAAAAAAAAAAQIDEP/aAAgBAgEBPwGVi5//xAAaEAACAgMAAAAAAAAAAAAAAAABMQACICEi/9oACAEBAAY/AmXD0XNWw//EABoQAQACAwEAAAAAAAAAAAAAAAEAEDFRcdH/2gAIAQEAAT8hHoQeqhqexw9r/9oADAMBAAIAAwAAABD43//EABgRAAIDAAAAAAAAAAAAAAAAAAABETFh/9oACAEDAQE/EE0Jw//EABgRAAIDAAAAAAAAAAAAAAAAAAABEVFh/9oACAECAQE/EMMh2f/EABwQAAICAgMAAAAAAAAAAAAAAAABETEhQVFx8P/aAAgBAQABPxBe4x89EqpP0zEWOiOpVg0fH2Kj/9k=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 50.28571428571429%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAKABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAMBBP/EABYBAQEBAAAAAAAAAAAAAAAAAAIDBP/aAAwDAQACEAMQAAAB7Lazqq65/8QAGRAAAwADAAAAAAAAAAAAAAAAAAECEBEh/9oACAEBAAEFAt2dHNN5/8QAFhEBAQEAAAAAAAAAAAAAAAAAARAR/9oACAEDAQE/AQyf/8QAFxEBAAMAAAAAAAAAAAAAAAAAAQIDEP/aAAgBAgEBPwGVi5//xAAaEAACAgMAAAAAAAAAAAAAAAABMQACICEi/9oACAEBAAY/AmXD0XNWw//EABoQAQACAwEAAAAAAAAAAAAAAAEAEDFRcdH/2gAIAQEAAT8hHoQeqhqexw9r/9oADAMBAAIAAwAAABD43//EABgRAAIDAAAAAAAAAAAAAAAAAAABETFh/9oACAEDAQE/EE0Jw//EABgRAAIDAAAAAAAAAAAAAAAAAAABEVFh/9oACAECAQE/EMMh2f/EABwQAAICAgMAAAAAAAAAAAAAAAABETEhQVFx8P/aAAgBAQABPxBe4x89EqpP0zEWOiOpVg0fH2Kj/9k=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;faas_diagram&quot;
         title=&quot;&quot;
-        src=&quot;/static/75f2521335608d5d448030d8d8111009/571ad/faas_diagram.jpg&quot;
-        srcset=&quot;/static/75f2521335608d5d448030d8d8111009/8dc06/faas_diagram.jpg 175w,
-/static/75f2521335608d5d448030d8d8111009/f4417/faas_diagram.jpg 350w,
-/static/75f2521335608d5d448030d8d8111009/571ad/faas_diagram.jpg 700w,
-/static/75f2521335608d5d448030d8d8111009/dfc22/faas_diagram.jpg 801w&quot;
+        src=&quot;/static/75f2521335608d5d448030d8d8111009/29d31/faas_diagram.jpg&quot;
+        srcset=&quot;/static/75f2521335608d5d448030d8d8111009/e52aa/faas_diagram.jpg 175w,
+/static/75f2521335608d5d448030d8d8111009/70ebb/faas_diagram.jpg 350w,
+/static/75f2521335608d5d448030d8d8111009/29d31/faas_diagram.jpg 700w,
+/static/75f2521335608d5d448030d8d8111009/d5834/faas_diagram.jpg 801w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1304,7 +1498,7 @@ where we first define &lt;code class=&quot;language-text&quot;&gt;provider&lt;/c
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/c345b9c56b520224ea049671d45bb9b6/4bad3/architecture_aws_lambda.png&quot;
+    href=&quot;/static/c345b9c56b520224ea049671d45bb9b6/a3767/architecture_aws_lambda.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1316,19 +1510,19 @@ where we first define &lt;code class=&quot;language-text&quot;&gt;provider&lt;/c
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 63.63636363636363%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsSAAALEgHS3X78AAACBUlEQVQ4y41Sy24TQRDcf+UvuCDxEAiRExLHXLhxRlzIiRwclhAngFkpmNixSRyMHezdmZ3ZeRU1Y29iohwyUql7e2qqH9tZCOEEQI+2oC1c8EXjHGELv461dxExthkP1/534n6GG8cTob+b0B4Sr/zXH0Y4OK1w2yHvZbZ2bNTyzvnGBy/nF76ajryhb4zxQghvrY25fDGc+sm8TD7f+bYGwvF7qxWMQTjTQPGq/rYD8fMzmsi2BoZxY22qolNMcDS4XHXDysN1+THBi2yj05TGEHJ4hHryAzalBRaiRtM0iXjY/43BxWL1yIf2WavxPAkqpX0ssvq1B6WXqM+OIWdnkKSq6RBq/BUNfbbP5wajaYn8ZNHOLbRdEs+ymHk2m3N+Fuf7r7BcnkN337LlfQgS9ekhdG8H0gFluUwFdY5n2N4d3yb49Krl1C7nrjkroRqIWkHQl3/GqEY98GdBSgnHmPceti6TvdHyk2xDPUWNdzEQfzkEKXpwAP3lHXScbVVSmGMYdmHeb5Hno9qm4KP/BQkuddo7x+yS1dTlX4j5BRMFVBQ0zkNdTiAH3cRpK1xrPGwFDeHS5jiXbFxKFb/7HWc/vXE6/nCfsqX79d659SJEMUs8yHCHY6zBHc/jKNil8h6R08+ZNq+1zpVpki+VygXh431AHnktd2XDx7CK04Z7/wDGsen+Gr0cggAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 63.42857142857142%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAANCAYAAACpUE5eAAAACXBIWXMAAAsSAAALEgHS3X78AAACBUlEQVQ4y41Sy24TQRDcf+UvuCDxEAiRExLHXLhxRlzIiRwclhAngFkpmNixSRyMHezdmZ3ZeRU1Y29iohwyUql7e2qqH9tZCOEEQI+2oC1c8EXjHGELv461dxExthkP1/534n6GG8cTob+b0B4Sr/zXH0Y4OK1w2yHvZbZ2bNTyzvnGBy/nF76ajryhb4zxQghvrY25fDGc+sm8TD7f+bYGwvF7qxWMQTjTQPGq/rYD8fMzmsi2BoZxY22qolNMcDS4XHXDysN1+THBi2yj05TGEHJ4hHryAzalBRaiRtM0iXjY/43BxWL1yIf2WavxPAkqpX0ssvq1B6WXqM+OIWdnkKSq6RBq/BUNfbbP5wajaYn8ZNHOLbRdEs+ymHk2m3N+Fuf7r7BcnkN337LlfQgS9ekhdG8H0gFluUwFdY5n2N4d3yb49Krl1C7nrjkroRqIWkHQl3/GqEY98GdBSgnHmPceti6TvdHyk2xDPUWNdzEQfzkEKXpwAP3lHXScbVVSmGMYdmHeb5Hno9qm4KP/BQkuddo7x+yS1dTlX4j5BRMFVBQ0zkNdTiAH3cRpK1xrPGwFDeHS5jiXbFxKFb/7HWc/vXE6/nCfsqX79d659SJEMUs8yHCHY6zBHc/jKNil8h6R08+ZNq+1zpVpki+VygXh431AHnktd2XDx7CK04Z7/wDGsen+Gr0cggAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;architecture_aws_lambda&quot;
         title=&quot;&quot;
-        src=&quot;/static/c345b9c56b520224ea049671d45bb9b6/69344/architecture_aws_lambda.png&quot;
-        srcset=&quot;/static/c345b9c56b520224ea049671d45bb9b6/17006/architecture_aws_lambda.png 175w,
-/static/c345b9c56b520224ea049671d45bb9b6/d6f3f/architecture_aws_lambda.png 350w,
-/static/c345b9c56b520224ea049671d45bb9b6/69344/architecture_aws_lambda.png 700w,
-/static/c345b9c56b520224ea049671d45bb9b6/b1f9d/architecture_aws_lambda.png 1050w,
-/static/c345b9c56b520224ea049671d45bb9b6/4bad3/architecture_aws_lambda.png 1210w&quot;
+        src=&quot;/static/c345b9c56b520224ea049671d45bb9b6/8c557/architecture_aws_lambda.png&quot;
+        srcset=&quot;/static/c345b9c56b520224ea049671d45bb9b6/4edbd/architecture_aws_lambda.png 175w,
+/static/c345b9c56b520224ea049671d45bb9b6/13ae7/architecture_aws_lambda.png 350w,
+/static/c345b9c56b520224ea049671d45bb9b6/8c557/architecture_aws_lambda.png 700w,
+/static/c345b9c56b520224ea049671d45bb9b6/e996b/architecture_aws_lambda.png 1050w,
+/static/c345b9c56b520224ea049671d45bb9b6/a3767/architecture_aws_lambda.png 1210w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1417,7 +1611,7 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/1dda8/esp8266_remote_temperature_diagram.png&quot;
+    href=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/1e043/esp8266_remote_temperature_diagram.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1429,17 +1623,17 @@ and then business logic will be handled by lightweight nodejs application runnin
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 48.55072463768116%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAAsSAAALEgHS3X78AAACj0lEQVQoz2NgLF/Bwvz/PxNj2wEWxtJyBhhQv3OBRWxuDwdDsi8Lw7QOFoZ4Txbh6c0csjPqWUDyTCntTIy5s3gZE7uFGJN7hRiLFvIx5s1hZmBMn8TPYOojyRhSys+Yv0yQQa+ZjdtYl0fU11MIpPHOs+dNd548OXPz2YsuBtlpbPxxVSKsjAyCDGFLpJh6T/ADlQgAMTdj+0EuoIGyDIwhFZwM/KIKDHKK3IzZq8UYzFqFOOQlpLjlZGWBChnPv32/98Lbt/8PXrl5i0F9DQ+bW4w4CyeHDAOXiDSDhrkCY+hkCcacZYKMhXN4GPPnszIw5c3iZQqeJ8WUt4yPqXw2O8hVOv9/MgcAgwHEPvbju8bRL1+cbj1/aeVrMJWJr7Gai9/IAORtZpC8sE6YnLienQA8rCKBWIidSVqUgYEFJibWVs8uVFPKyoAFSM/o57D4/x9ZiAvB9GdgYHWYy86gOcGUwXgyH0xYYlIXq+Tkbk6RjgbW6FcP2Xb9/8+ScPIwu2RPK5vE5G4e2eZ6xlsPfjGC1M7adGTJrI0Hc0HsmRsPMTFM2XpbYNmhxzMXH3miCBJccPgRWKF4VxOr4rHdLBwmhgIsstKyPB4u3HKbVrACxVmqVAIZ/v//D1Z34+2X15eev18AZbMwfP7/X+rG/cf/Lz96bQMWfPmZSby5BtlLoHAVhIUZCNglFsANXH/0ws7VB87UgtjrDp5kZvgINPDizbv/z9x5ZgsSvPzkA5PUvGkMiif3MXA72aGEH2+AN4PswW3owcoNxJz//28GRyLD1Te/hG6/+rz93JPP2iD+2adfGLFFhomJCZhOSUlhA2Le5NQ0nqyECO6cWQe4jBoPSq2YXihXGefBDgACGNmIV03LbgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 48.57142857142858%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAAsSAAALEgHS3X78AAACj0lEQVQoz2NgLF/Bwvz/PxNj2wEWxtJyBhhQv3OBRWxuDwdDsi8Lw7QOFoZ4Txbh6c0csjPqWUDyTCntTIy5s3gZE7uFGJN7hRiLFvIx5s1hZmBMn8TPYOojyRhSys+Yv0yQQa+ZjdtYl0fU11MIpPHOs+dNd548OXPz2YsuBtlpbPxxVSKsjAyCDGFLpJh6T/ADlQgAMTdj+0EuoIGyDIwhFZwM/KIKDHKK3IzZq8UYzFqFOOQlpLjlZGWBChnPv32/98Lbt/8PXrl5i0F9DQ+bW4w4CyeHDAOXiDSDhrkCY+hkCcacZYKMhXN4GPPnszIw5c3iZQqeJ8WUt4yPqXw2O8hVOv9/MgcAgwHEPvbju8bRL1+cbj1/aeVrMJWJr7Gai9/IAORtZpC8sE6YnLienQA8rCKBWIidSVqUgYEFJibWVs8uVFPKyoAFSM/o57D4/x9ZiAvB9GdgYHWYy86gOcGUwXgyH0xYYlIXq+Tkbk6RjgbW6FcP2Xb9/8+ScPIwu2RPK5vE5G4e2eZ6xlsPfjGC1M7adGTJrI0Hc0HsmRsPMTFM2XpbYNmhxzMXH3miCBJccPgRWKF4VxOr4rHdLBwmhgIsstKyPB4u3HKbVrACxVmqVAIZ/v//D1Z34+2X15eev18AZbMwfP7/X+rG/cf/Lz96bQMWfPmZSby5BtlLoHAVhIUZCNglFsANXH/0ws7VB87UgtjrDp5kZvgINPDizbv/z9x5ZgsSvPzkA5PUvGkMiif3MXA72aGEH2+AN4PswW3owcoNxJz//28GRyLD1Te/hG6/+rz93JPP2iD+2adfGLFFhomJCZhOSUlhA2Le5NQ0nqyECO6cWQe4jBoPSq2YXihXGefBDgACGNmIV03LbgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;esp8266_remote_temperature_diagram&quot;
         title=&quot;&quot;
-        src=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/1dda8/esp8266_remote_temperature_diagram.png&quot;
-        srcset=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/17006/esp8266_remote_temperature_diagram.png 175w,
-/static/5e5d7d080fb98fe2e4801751713735c5/d6f3f/esp8266_remote_temperature_diagram.png 350w,
-/static/5e5d7d080fb98fe2e4801751713735c5/1dda8/esp8266_remote_temperature_diagram.png 690w&quot;
+        src=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/1e043/esp8266_remote_temperature_diagram.png&quot;
+        srcset=&quot;/static/5e5d7d080fb98fe2e4801751713735c5/4edbd/esp8266_remote_temperature_diagram.png 175w,
+/static/5e5d7d080fb98fe2e4801751713735c5/13ae7/esp8266_remote_temperature_diagram.png 350w,
+/static/5e5d7d080fb98fe2e4801751713735c5/1e043/esp8266_remote_temperature_diagram.png 690w&quot;
         sizes=&quot;(max-width: 690px) 100vw, 690px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1470,7 +1664,7 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/b249f/ESP8266_upload.png&quot;
+    href=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/f5209/ESP8266_upload.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1482,19 +1676,19 @@ and then business logic will be handled by lightweight nodejs application runnin
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 55.89066918001885%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACN0lEQVQoz32STWsTURSGZ+s/0I3uXLhSFMS9iFBx0YVYNxYEtUJBKGk3orhwVQUFNy4VlLZoG9NvmzRJk04mycxk8lGT2rQWirU0k6aaNOlHZh4nY5pGCz3wcuCee59zeM8VqoZBtWpgh2mwtJglEddQ5KidY6pCMhlH19ftK4Z13zBNW2ZT3pdAPQwT9N/bRLQ5AmEVjz9EQFLxizLT4QhJq9FRYTeyJMzEVixIlkHfPOnsGqFZGfe0yKRXxGtljzuI1z/LbGqJ4h7kCgXW8wXyW9sUyxXyv4qUd3YbYOHU5W6OnW7lfEsHaaeL+Rk/UZ+bQNCSc5CZoSG8zn5cAx959fodJ290cqLNwdmbHZy73cXx9iecaevk+rUWHI5uhJdvx3n0fIBbPT0kMl9RNY33A30MT4zg9nkZm/zChH+KzMICfZ4AF7ufceXxG1rb73LpjoMLXS+4+vApD+7fo7e398DDKc2DL+jn8ycn/R/6EAMic4kkmhIjFlfJb+gUKfFj62fdc7O+SPMfL4VqtWodWt7sbpAtfSeQFm24KzTCaHic4dAYrugo0nKUucI3NrYLfzkcgGrbrXFqEvbXXauXdyrEUwkiSoRgKEhUiSJFJEJqiMXVpcbjoyTUOpn1sQ3rP2bSGbSYRlgKo6kxlKiCrMmsrK00gM3g/5sIzYU9a+RUKoUsy4iiaH1u2QZLisTy6vIhYHNuePh/cXNzk1wuZyufz9tZ13XK5fIhQPO7SqVCqVTiD2QzC3rQ67XmAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 55.99999999999999%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAALCAYAAAB/Ca1DAAAACXBIWXMAAA7EAAAOxAGVKw4bAAACN0lEQVQoz32STWsTURSGZ+s/0I3uXLhSFMS9iFBx0YVYNxYEtUJBKGk3orhwVQUFNy4VlLZoG9NvmzRJk04mycxk8lGT2rQWirU0k6aaNOlHZh4nY5pGCz3wcuCee59zeM8VqoZBtWpgh2mwtJglEddQ5KidY6pCMhlH19ftK4Z13zBNW2ZT3pdAPQwT9N/bRLQ5AmEVjz9EQFLxizLT4QhJq9FRYTeyJMzEVixIlkHfPOnsGqFZGfe0yKRXxGtljzuI1z/LbGqJ4h7kCgXW8wXyW9sUyxXyv4qUd3YbYOHU5W6OnW7lfEsHaaeL+Rk/UZ+bQNCSc5CZoSG8zn5cAx959fodJ290cqLNwdmbHZy73cXx9iecaevk+rUWHI5uhJdvx3n0fIBbPT0kMl9RNY33A30MT4zg9nkZm/zChH+KzMICfZ4AF7ufceXxG1rb73LpjoMLXS+4+vApD+7fo7e398DDKc2DL+jn8ycn/R/6EAMic4kkmhIjFlfJb+gUKfFj62fdc7O+SPMfL4VqtWodWt7sbpAtfSeQFm24KzTCaHic4dAYrugo0nKUucI3NrYLfzkcgGrbrXFqEvbXXauXdyrEUwkiSoRgKEhUiSJFJEJqiMXVpcbjoyTUOpn1sQ3rP2bSGbSYRlgKo6kxlKiCrMmsrK00gM3g/5sIzYU9a+RUKoUsy4iiaH1u2QZLisTy6vIhYHNuePh/cXNzk1wuZyufz9tZ13XK5fIhQPO7SqVCqVTiD2QzC3rQ67XmAAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;ESP8266_upload&quot;
         title=&quot;&quot;
-        src=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/69344/ESP8266_upload.png&quot;
-        srcset=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/17006/ESP8266_upload.png 175w,
-/static/25249e1fdd8758c1dcd6545a8021fe83/d6f3f/ESP8266_upload.png 350w,
-/static/25249e1fdd8758c1dcd6545a8021fe83/69344/ESP8266_upload.png 700w,
-/static/25249e1fdd8758c1dcd6545a8021fe83/b1f9d/ESP8266_upload.png 1050w,
-/static/25249e1fdd8758c1dcd6545a8021fe83/b249f/ESP8266_upload.png 1061w&quot;
+        src=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/8c557/ESP8266_upload.png&quot;
+        srcset=&quot;/static/25249e1fdd8758c1dcd6545a8021fe83/4edbd/ESP8266_upload.png 175w,
+/static/25249e1fdd8758c1dcd6545a8021fe83/13ae7/ESP8266_upload.png 350w,
+/static/25249e1fdd8758c1dcd6545a8021fe83/8c557/ESP8266_upload.png 700w,
+/static/25249e1fdd8758c1dcd6545a8021fe83/e996b/ESP8266_upload.png 1050w,
+/static/25249e1fdd8758c1dcd6545a8021fe83/f5209/ESP8266_upload.png 1061w&quot;
         sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1506,7 +1700,7 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/85801ae33ce503d5e02cee5724711ac0/52262/ESP8266_run.png&quot;
+    href=&quot;/static/85801ae33ce503d5e02cee5724711ac0/6a91e/ESP8266_run.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1518,16 +1712,16 @@ and then business logic will be handled by lightweight nodejs application runnin
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 177.55905511811022%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAkCAYAAACJ8xqgAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAFKElEQVRIx6WWC0yTVxTHvxlJ5jbMtgyK4txi1BCRMJ0axSDoptMtgsNA6GDKHB1DNAsCFXRE3uImVQSsQEUt47GBYCkSdDrUKkMEx0AYUoE6kJdM2sqj9PXf/T7aCTIQ6m1OvpMvp7/+z73n3FMKEyy9Xg+dTsf4EokEXC4X4eHhSExMhEaj+S/m+UVNBjR+kcfjgaIomJmZwc7ODmq1+uWAfD4f5ubmsLa2hpOT0/SBdOBoYFJyMmbNmgVLS0s4ODhANTw8Jm5KCumlVo8ABWmpDJDFYmGdoyONMk0h9DrQyR2IioP566/BiihcvmIlmtq7pqeQSVc7csIFN6thw94L1lYOLIjNc+VgX5LQGDh9YObV23jVbR/mfBUJK59DMPcMhXtcuukKc8oqMcczCHN3HISl9wFYsUPASTjzEsBrlZjvFQwLrzC8Q8ySzcWuoxmmALWMf5akTG3ZgyUBh7HAN5JJ3yU6zXSFuUThXJLyMv9ILNjGwcwPN8M1OMYQp5s6UGsAlpRXwzUwAgvYgVjkHYz3vLlgx5mg0AgsulkF593fY9V2HzhtccEq543wC4swPWUhXTbbg2Cz2hlr7G2xzNYGOznfTj9lI/AcAc5w+Q727ACs9/aDg8cu+EYmmK7w3G+VMHMLwmrucdgHJsAmIB7uR86OAxr9F5fNJQlmbNyFxX4xeNcnHNakwANP5Y0D0pcxbRMDNSNAQU4+KOslsPo6GiyvULzN3g/fxKwxwNFpv1DhadFlzHT4HAv9YhmFLNJ+HvEZo6phJC4rKwsRkRFTOZRKzP4iDA77eXDkHoNdQBzcYgXjgLwEHji+nBcrTL9SCYtPdmKTx3Z8tIMDJw8OXKP4Y1Mmn9rGOjRIGyYG6gz70qYYQElBCXjf7Aaf7GdR2S3cbmxhbm2jOsWTx0grKcXFX0STjwDjGEV3Jy4eiUevvO9/44aUfUjKKUVJqmjyEaAnQFqnqrUVuWQmpwgEEBeJUVBYCJFIxJhYXIy87Ezw839F6ZliUPTmjzWtwYhvGFJqmQwFUVGoaWiAamgIcrkcSqWSMblCgeF+BR4oARH//OQpGxetsDAmGi3t7RPGtPYbgIdPX0Os4Bpi0q8zzx/Jy/i0UsQIJIg6VYbOp0RlVwdRGI0motS4t8ZtGdlnHVqe0kDSBLNXhYBaGAZqETFbctVbsGD2/lbYuh7Fyg3+kJwSoiNXiOy4Q2hufzShQtkguepSC0FtYIeR2gqB594f8PHOeLy1aDPeXLEHTt7H4fLlQdyt+BPyinLkhIWivr4e+oEBDPb1YYic+LCyH4NyJfSKJ2jsHER+ghDUJtKbnr5B+GBbBOY6BmP5GmfM++w4Fvskw5Fc+eWJfHTkZCM7NBQ3Tp5EFzlZWX4e2gouoCEjBdKss+i+UABJlhjnT+SAWvppCNa6BWP+ei5eWRqIOWsD8Mb6Y5i3zg9r3SPQ2q1iUqqurcV9qXRMms13iqDoamJ8aY8KVbIBUJfLm0Hb1QopblY1Q3hJihTxAySn/Ywd/oeQX1iM62VlSEkmappGgBrDv686SRF6Hv7F+A1/K3Crvnd82fSrtMj/vQuXa7qReakW6eK7OFlYhfTiGojvkI6524Pi6m6U/NGL87eaybtHuFLXh59udOCeTAmKHkajjS6DQZUGyiEthklFqEmr0OVNP+kfezqkYZ6K/mF09SrQ1vkY3f8o0NnzBCqV6plC/ai2G9WEz9mzpdWo8VDWigfSJtTfq0PT/UbU1NTgX/I2rwVA5LL8AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 177.7142857142857%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAkCAYAAACJ8xqgAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAFKElEQVRIx6WWC0yTVxTHvxlJ5jbMtgyK4txi1BCRMJ0axSDoptMtgsNA6GDKHB1DNAsCFXRE3uImVQSsQEUt47GBYCkSdDrUKkMEx0AYUoE6kJdM2sqj9PXf/T7aCTIQ6m1OvpMvp7/+z73n3FMKEyy9Xg+dTsf4EokEXC4X4eHhSExMhEaj+S/m+UVNBjR+kcfjgaIomJmZwc7ODmq1+uWAfD4f5ubmsLa2hpOT0/SBdOBoYFJyMmbNmgVLS0s4ODhANTw8Jm5KCumlVo8ABWmpDJDFYmGdoyONMk0h9DrQyR2IioP566/BiihcvmIlmtq7pqeQSVc7csIFN6thw94L1lYOLIjNc+VgX5LQGDh9YObV23jVbR/mfBUJK59DMPcMhXtcuukKc8oqMcczCHN3HISl9wFYsUPASTjzEsBrlZjvFQwLrzC8Q8ySzcWuoxmmALWMf5akTG3ZgyUBh7HAN5JJ3yU6zXSFuUThXJLyMv9ILNjGwcwPN8M1OMYQp5s6UGsAlpRXwzUwAgvYgVjkHYz3vLlgx5mg0AgsulkF593fY9V2HzhtccEq543wC4swPWUhXTbbg2Cz2hlr7G2xzNYGOznfTj9lI/AcAc5w+Q727ACs9/aDg8cu+EYmmK7w3G+VMHMLwmrucdgHJsAmIB7uR86OAxr9F5fNJQlmbNyFxX4xeNcnHNakwANP5Y0D0pcxbRMDNSNAQU4+KOslsPo6GiyvULzN3g/fxKwxwNFpv1DhadFlzHT4HAv9YhmFLNJ+HvEZo6phJC4rKwsRkRFTOZRKzP4iDA77eXDkHoNdQBzcYgXjgLwEHji+nBcrTL9SCYtPdmKTx3Z8tIMDJw8OXKP4Y1Mmn9rGOjRIGyYG6gz70qYYQElBCXjf7Aaf7GdR2S3cbmxhbm2jOsWTx0grKcXFX0STjwDjGEV3Jy4eiUevvO9/44aUfUjKKUVJqmjyEaAnQFqnqrUVuWQmpwgEEBeJUVBYCJFIxJhYXIy87Ezw839F6ZliUPTmjzWtwYhvGFJqmQwFUVGoaWiAamgIcrkcSqWSMblCgeF+BR4oARH//OQpGxetsDAmGi3t7RPGtPYbgIdPX0Os4Bpi0q8zzx/Jy/i0UsQIJIg6VYbOp0RlVwdRGI0motS4t8ZtGdlnHVqe0kDSBLNXhYBaGAZqETFbctVbsGD2/lbYuh7Fyg3+kJwSoiNXiOy4Q2hufzShQtkguepSC0FtYIeR2gqB594f8PHOeLy1aDPeXLEHTt7H4fLlQdyt+BPyinLkhIWivr4e+oEBDPb1YYic+LCyH4NyJfSKJ2jsHER+ghDUJtKbnr5B+GBbBOY6BmP5GmfM++w4Fvskw5Fc+eWJfHTkZCM7NBQ3Tp5EFzlZWX4e2gouoCEjBdKss+i+UABJlhjnT+SAWvppCNa6BWP+ei5eWRqIOWsD8Mb6Y5i3zg9r3SPQ2q1iUqqurcV9qXRMms13iqDoamJ8aY8KVbIBUJfLm0Hb1QopblY1Q3hJihTxAySn/Ywd/oeQX1iM62VlSEkmappGgBrDv686SRF6Hv7F+A1/K3Crvnd82fSrtMj/vQuXa7qReakW6eK7OFlYhfTiGojvkI6524Pi6m6U/NGL87eaybtHuFLXh59udOCeTAmKHkajjS6DQZUGyiEthklFqEmr0OVNP+kfezqkYZ6K/mF09SrQ1vkY3f8o0NnzBCqV6plC/ai2G9WEz9mzpdWo8VDWigfSJtTfq0PT/UbU1NTgX/I2rwVA5LL8AAAAAElFTkSuQmCC&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;ESP8266_run&quot;
         title=&quot;&quot;
-        src=&quot;/static/85801ae33ce503d5e02cee5724711ac0/52262/ESP8266_run.png&quot;
-        srcset=&quot;/static/85801ae33ce503d5e02cee5724711ac0/17006/ESP8266_run.png 175w,
-/static/85801ae33ce503d5e02cee5724711ac0/52262/ESP8266_run.png 254w&quot;
+        src=&quot;/static/85801ae33ce503d5e02cee5724711ac0/6a91e/ESP8266_run.png&quot;
+        srcset=&quot;/static/85801ae33ce503d5e02cee5724711ac0/4edbd/ESP8266_run.png 175w,
+/static/85801ae33ce503d5e02cee5724711ac0/6a91e/ESP8266_run.png 254w&quot;
         sizes=&quot;(max-width: 254px) 100vw, 254px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1539,10 +1733,10 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;ol&gt;
 &lt;li&gt;establish and keep a connection to local network (to gain access to the internet) &lt;/li&gt;
 &lt;/ol&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;ESP8266WiFi.h&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;ESP8266WiFi.h&gt;&lt;/span&gt;&lt;/span&gt;
 
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; wifi_ssid &quot;&amp;lt;your ssid&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; wifi_password &quot;&amp;lt;ssid password&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;wifi_ssid &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;your ssid&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;wifi_password &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;ssid password&gt;&quot;&lt;/span&gt;&lt;/span&gt;
 
 &lt;span class=&quot;token keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;setup&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
 
@@ -1561,10 +1755,10 @@ and then business logic will be handled by lightweight nodejs application runnin
 &lt;ol start=&quot;2&quot;&gt;
 &lt;li&gt;read data from the temperature sensor&lt;/li&gt;
 &lt;/ol&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;OneWire.h&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;DallasTemperature.h&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;OneWire.h&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;DallasTemperature.h&gt;&lt;/span&gt;&lt;/span&gt;
 
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; ONE_WIRE_BUS 2&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;ONE_WIRE_BUS &lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;
 
 OneWire &lt;span class=&quot;token function&quot;&gt;oneWire&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;ONE_WIRE_BUS&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 DallasTemperature &lt;span class=&quot;token function&quot;&gt;sensors&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;&amp;amp;&lt;/span&gt;oneWire&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1578,14 +1772,14 @@ DallasTemperature &lt;span class=&quot;token function&quot;&gt;sensors&lt;/span&
 &lt;ol start=&quot;3&quot;&gt;
 &lt;li&gt;push readings to MQTT broker&lt;/li&gt;
 &lt;/ol&gt;
-&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;ESP8266WiFi.h&gt;&lt;/span&gt;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;PubSubClient.h&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;c&quot;&gt;&lt;pre class=&quot;language-c&quot;&gt;&lt;code class=&quot;language-c&quot;&gt;&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;ESP8266WiFi.h&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;include&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&amp;lt;PubSubClient.h&gt;&lt;/span&gt;&lt;/span&gt;
 
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; mqtt_server &quot;&amp;lt;server ip or hostname&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; mqtt_port &quot;&amp;lt;server port&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; mqtt_user &quot;&amp;lt;user name&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; mqtt_password &quot;&amp;lt;user password&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;token macro property&quot;&gt;#&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; temperature_topic &quot;temperature/home/basement&quot;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;mqtt_server &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;server ip or hostname&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;mqtt_port &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;server port&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;mqtt_user &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;user name&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;mqtt_password &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;&amp;lt;user password&gt;&quot;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token macro property&quot;&gt;&lt;span class=&quot;token directive-hash&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;token directive keyword&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;token expression&quot;&gt;temperature_topic &lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;temperature/home/basement&quot;&lt;/span&gt;&lt;/span&gt;
 
 WiFiClient espClient&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 PubSubClient &lt;span class=&quot;token function&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;espClient&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1640,7 +1834,7 @@ PubSubClient &lt;span class=&quot;token function&quot;&gt;client&lt;/span&gt;&lt
     &lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; deviceId   &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; req&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;body&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;deviceId&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; registrationId &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; req&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;body&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;registrationId&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;    
 
-    Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;deviceId &lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; devices&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;find&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;deviceId &lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; devices&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
         &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
             console&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
             res&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;sendStatus&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1648,9 +1842,9 @@ PubSubClient &lt;span class=&quot;token function&quot;&gt;client&lt;/span&gt;&lt
 
         &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;devices&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;length &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
             Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-                deviceName&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; deviceName&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
-                deviceId&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
-                registrationId&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; registrationId
+                deviceName&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; deviceName&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+                deviceId&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+                registrationId&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; registrationId
             &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; device&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
                 &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
                     console&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1669,8 +1863,8 @@ app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=
     &lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; registrationId &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; req&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;body&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;registrationId&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 
     Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;findOneAndUpdate&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; deviceId &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; 
-        &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; registrationId&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; registrationId &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; 
+        &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; deviceId&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; deviceId &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; 
+        &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; registrationId&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; registrationId &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; 
         &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; device&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
             &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
                 console&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1682,7 +1876,7 @@ app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=
 
 app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;delete&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&apos;/device/:deviceId&apos;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;req&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; res&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;token keyword&quot;&gt;var&lt;/span&gt; deviceId   &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; req&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;params&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;deviceId&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
-    Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;findOneAndRemove&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;deviceId &lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    Device&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;findOneAndRemove&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;deviceId &lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; deviceId&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;err&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
         &lt;span class=&quot;token keyword&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
             console&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;err&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
             res&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;sendStatus&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;500&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
@@ -1699,8 +1893,8 @@ app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=
     lastTemp&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;temperature &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; message&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
     aWss&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;clients&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;forEach&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token keyword&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;client&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
         client&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;send&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token constant&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;stringify&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
-            topic&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; topic&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
-            temperature&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; message&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            topic&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; topic&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+            temperature&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; message&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;toString&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
         &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
     &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
 
@@ -1724,7 +1918,7 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/e8c3d/android_widget.png&quot;
+    href=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/8f77f/android_widget.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1736,16 +1930,16 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 177.74566473988438%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAkCAYAAACJ8xqgAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAIgElEQVRIx22V51eT2RaH37/k3s9TLSg4M44oKEgd+oAKShOxgEDoEAiE0AIo0kRQSmjSu46iUqSJooC9ARbAOk39+Nyd4Ky5s+7NWs/a+5x3/377nJ28K8r5onoulDbREFdAs7qIs8kn/oemz/xjL6mQFk0p/ccN9ORX062voiv3DMp4WTvjZR0M5jUwXNDEUEEjQ/kNQuP/ZfCvKPVDUj9a0sZYaTsjhc0mlNmibmaKupgt7saYz5b2MFfe/09O9n2m38SsiT4TM6W9q5QZ6UNZGp7j1eg93l57wrtrD3jZc53Fqiss1g6xWDNoYsEwZGKxZpUFI4ZhU5w3Ivm8PJ+vHkT58+MHjJ9P96f5Y+WdKX/Xd5PXhlHeNE7wpn6cV23XWO69wXKP0HXdxEr36nqlfYpXzfK8Y4plqVf++PTRZDL1aJBri6uGv1+6w/vaMd43TvK+YYJ3Et81TfLWiORvZG+leZKllkmWmyZYlvWSxNcGMfz1wTM+zK/wx7PXfHyxwofrT3lnuLpK7Spva4TqkVWqRngjLBtGeCk1L+uusmSMUveq6qqcsH6Ej41jfGoY40P9GB9rR/kkR/8oXT/UGxlfpW6cPw1C7Sq/VY3ytnKItxXDvKkY4rXwSlB+rbvCTfmZ3NDXmZjKqWMio5oJXQ2TmbWmfDy9igltNZM6A5MZBsbSq7mf38E7o0n5ZeEKK0ZOXkFZPnMOjfd+kj0CUbsHkvrzAbIDo9D6HpH9UHT+R8kKiJR1GIkugSS7BhFht5vW8Fz+rLzKcvFFVkovsVxyiaWSAZQVMdTtDiXNOwS1awD6wEgG6tvpKK6iMaeEloJTNOnLqEzMJt7OF417CDEOfrSF6/m9fJilE7+wfOKCxAu8FJSV0/3odoWi8QwmS05VFJbEmeQcymMzKFOlU3w0BX2QihpNAWVRaaS4BBFt70vrkRx+Kxvk5bFzLB0/L/E8LyRXlk71keYlV3b1R7fnMLlBUWTuDUPne5hUrxC0uw+hMY7BP5LTaj1JzgFE2O6i+VAWv5Zc5nl+Hy8L+nmR32/KlSV5ffL2hJHjc5hs70NkeoaS6RX6OR5E53FACEXrGkKaczCZHodIdg6k44ietycu8kzfI/SyaCS3B+V9xYAMU7oU9fHiRB/PC3t5dryHxWM9LBR0M5/fxVN9p4knuZ08zu7gYWYbT7I7xaCX+ZxunmZ38ySrm8eZXShvygZ4UzrA6+IBVoourg648BfTTJ4XnONZ/jkW8/rlBH0s5PbxNKdXzHp4JAYPdJ3cz+jknhFtB3fTO1Beyrf0XMSLIl4Q8VN9v5ykj0cifCjCByK8L53v6bq4K8I7Iryd3s7ttHbmjGjamDWS2sqMoDyTgS7kSWeZwWO5wqN/mIhBxn8Z/CVMaeFWSvMq6rPcVDdxM7mJ6eRGlEW9zClX5iQzeZwl89G18yCjTa7Qyt20Fm5rWphLbWY25SwzIrwloltJDdxMrGc6Ud6ueAPXTdQyFVcjhjltzGe18kTXwiNtMw/Tz3Jf08Td1EbuqBu4ra5nLqmO2UQDMwm13Iqv4WZsDdMx1dyIrmJKdZprUZVMRlYyEVGB8jSjkcfpDTzU1HM/pY67ybXcSaphLqGa2fgqZuLOcCv2NDejTzOtqmQ6qoIbkaeYOlrOZPhJxsPKGD1SytXDxQwfKkJ5oK7mXlIVdxLOMBd3mpmYCm5FnxJhuQhPcj2ijKnwUq6FlTB5pJiJw0WMHTzBSGghQyHHubL/GJeC8xkIzONigF7+U6JPciuyjOmjpdwIL2bqSBGTh04wcbCQ8dDjjB44xtWQAob35zMUnMeVQD2XAnK5uC+HX/Zmcc43k/49Onp3ZdDjo0UZDRGBdBgJymNIOgz653J5bw4Dftlc9Mvigm8W50VwbncGfSLqFVH3z2l0eWno8Eil3T2VNrcUWl3VtLioUfp9dPR5i7uXFHqm0+WeRofQ7qahzTWVVpcUWn5KodlZzVmnZJock2hwSKTePpE6uwTqdiZgsI3HYBNPrU0cSrdzKp1OKbQ7SgeHZJrtkmjcmUiDrQhsEqjdEU/N9niqreOosorljFUMp7cJW6OptIymYks0p35UUS6c3KxCabJOoN5KOmyLo3prHGcsY6ncEisFMVIQQ+kPMZQIxULRdyoKN6k4bqHimLmKAvMo8jaq0G9QkWMWTbaZGOo3RMkiiqz1kWSuj0K3LooMQbtWhWZdNCnfRqExi0H7fQKJX0aQ+HUk8V9FEifEfPkXEUR9EUmEoGRaa8mw0qIVNNvSUW/VELclmegfEkixiCV1s5rEbRkkWKYTtzWdWMs0Yiw1RG9JQ7VFQ5illgOW2YTLfviPKSjBVnEEyEyCtsWy1zIK781heH53AJfNh7EIrsHB8xghMqtDO0Vsp+WofSYRDllCJuH2OWTKzGt3+hG3PY0Ip3wUe7NAVgkwRSfzYOy+2YtLWjf1Cx8I6X/C91tVuKz3l2f7cd4oSHTdEMKOzUEcCwpgIKGQy2meeP0gV3a2CJQCwSLIxE+bgnFY64d1zgDDS7+hHn7GJptE3M324WQRjNPGQBwFZ7MgbL/35V9FkUQOXOZupys2a/xQHMz34mDu9zcWItywB2vLg/z7cB1rPbP4SdZOm4wnlGfm/iYcpc51QwBmjnvYn+BAuJM3tusDUXZu2IXtBh9szbxNbF/jic16b+zWeeH4tQuOazxM6x1rfsZ+4x5p6oujNDZis24Xzmt9cfjWX2qMN5AT2piJwWes17qRFJ6Jh5U/VmvcsDX3YctXLhzxi6cgvYytktub7xLjXVh/40F5fi1H/dVYyyGcNvmZGio71rvzN264W+1jp7kX29e5SRMPtksTly2++OwMNuW20tiIzToPfB1CcbPcJ1f1kkY+2G304T/UcJQQbYNZbgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 177.7142857142857%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAkCAYAAACJ8xqgAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAIgElEQVRIx22V51eT2RaH37/k3s9TLSg4M44oKEgd+oAKShOxgEDoEAiE0AIo0kRQSmjSu46iUqSJooC9ARbAOk39+Nyd4Ky5s+7NWs/a+5x3/377nJ28K8r5onoulDbREFdAs7qIs8kn/oemz/xjL6mQFk0p/ccN9ORX062voiv3DMp4WTvjZR0M5jUwXNDEUEEjQ/kNQuP/ZfCvKPVDUj9a0sZYaTsjhc0mlNmibmaKupgt7saYz5b2MFfe/09O9n2m38SsiT4TM6W9q5QZ6UNZGp7j1eg93l57wrtrD3jZc53Fqiss1g6xWDNoYsEwZGKxZpUFI4ZhU5w3Ivm8PJ+vHkT58+MHjJ9P96f5Y+WdKX/Xd5PXhlHeNE7wpn6cV23XWO69wXKP0HXdxEr36nqlfYpXzfK8Y4plqVf++PTRZDL1aJBri6uGv1+6w/vaMd43TvK+YYJ3Et81TfLWiORvZG+leZKllkmWmyZYlvWSxNcGMfz1wTM+zK/wx7PXfHyxwofrT3lnuLpK7Spva4TqkVWqRngjLBtGeCk1L+uusmSMUveq6qqcsH6Ej41jfGoY40P9GB9rR/kkR/8oXT/UGxlfpW6cPw1C7Sq/VY3ytnKItxXDvKkY4rXwSlB+rbvCTfmZ3NDXmZjKqWMio5oJXQ2TmbWmfDy9igltNZM6A5MZBsbSq7mf38E7o0n5ZeEKK0ZOXkFZPnMOjfd+kj0CUbsHkvrzAbIDo9D6HpH9UHT+R8kKiJR1GIkugSS7BhFht5vW8Fz+rLzKcvFFVkovsVxyiaWSAZQVMdTtDiXNOwS1awD6wEgG6tvpKK6iMaeEloJTNOnLqEzMJt7OF417CDEOfrSF6/m9fJilE7+wfOKCxAu8FJSV0/3odoWi8QwmS05VFJbEmeQcymMzKFOlU3w0BX2QihpNAWVRaaS4BBFt70vrkRx+Kxvk5bFzLB0/L/E8LyRXlk71keYlV3b1R7fnMLlBUWTuDUPne5hUrxC0uw+hMY7BP5LTaj1JzgFE2O6i+VAWv5Zc5nl+Hy8L+nmR32/KlSV5ffL2hJHjc5hs70NkeoaS6RX6OR5E53FACEXrGkKaczCZHodIdg6k44ietycu8kzfI/SyaCS3B+V9xYAMU7oU9fHiRB/PC3t5dryHxWM9LBR0M5/fxVN9p4knuZ08zu7gYWYbT7I7xaCX+ZxunmZ38ySrm8eZXShvygZ4UzrA6+IBVoourg648BfTTJ4XnONZ/jkW8/rlBH0s5PbxNKdXzHp4JAYPdJ3cz+jknhFtB3fTO1Beyrf0XMSLIl4Q8VN9v5ykj0cifCjCByK8L53v6bq4K8I7Iryd3s7ttHbmjGjamDWS2sqMoDyTgS7kSWeZwWO5wqN/mIhBxn8Z/CVMaeFWSvMq6rPcVDdxM7mJ6eRGlEW9zClX5iQzeZwl89G18yCjTa7Qyt20Fm5rWphLbWY25SwzIrwloltJDdxMrGc6Ud6ueAPXTdQyFVcjhjltzGe18kTXwiNtMw/Tz3Jf08Td1EbuqBu4ra5nLqmO2UQDMwm13Iqv4WZsDdMx1dyIrmJKdZprUZVMRlYyEVGB8jSjkcfpDTzU1HM/pY67ybXcSaphLqGa2fgqZuLOcCv2NDejTzOtqmQ6qoIbkaeYOlrOZPhJxsPKGD1SytXDxQwfKkJ5oK7mXlIVdxLOMBd3mpmYCm5FnxJhuQhPcj2ijKnwUq6FlTB5pJiJw0WMHTzBSGghQyHHubL/GJeC8xkIzONigF7+U6JPciuyjOmjpdwIL2bqSBGTh04wcbCQ8dDjjB44xtWQAob35zMUnMeVQD2XAnK5uC+HX/Zmcc43k/49Onp3ZdDjo0UZDRGBdBgJymNIOgz653J5bw4Dftlc9Mvigm8W50VwbncGfSLqFVH3z2l0eWno8Eil3T2VNrcUWl3VtLioUfp9dPR5i7uXFHqm0+WeRofQ7qahzTWVVpcUWn5KodlZzVmnZJock2hwSKTePpE6uwTqdiZgsI3HYBNPrU0cSrdzKp1OKbQ7SgeHZJrtkmjcmUiDrQhsEqjdEU/N9niqreOosorljFUMp7cJW6OptIymYks0p35UUS6c3KxCabJOoN5KOmyLo3prHGcsY6ncEisFMVIQQ+kPMZQIxULRdyoKN6k4bqHimLmKAvMo8jaq0G9QkWMWTbaZGOo3RMkiiqz1kWSuj0K3LooMQbtWhWZdNCnfRqExi0H7fQKJX0aQ+HUk8V9FEifEfPkXEUR9EUmEoGRaa8mw0qIVNNvSUW/VELclmegfEkixiCV1s5rEbRkkWKYTtzWdWMs0Yiw1RG9JQ7VFQ5illgOW2YTLfviPKSjBVnEEyEyCtsWy1zIK781heH53AJfNh7EIrsHB8xghMqtDO0Vsp+WofSYRDllCJuH2OWTKzGt3+hG3PY0Ip3wUe7NAVgkwRSfzYOy+2YtLWjf1Cx8I6X/C91tVuKz3l2f7cd4oSHTdEMKOzUEcCwpgIKGQy2meeP0gV3a2CJQCwSLIxE+bgnFY64d1zgDDS7+hHn7GJptE3M324WQRjNPGQBwFZ7MgbL/35V9FkUQOXOZupys2a/xQHMz34mDu9zcWItywB2vLg/z7cB1rPbP4SdZOm4wnlGfm/iYcpc51QwBmjnvYn+BAuJM3tusDUXZu2IXtBh9szbxNbF/jic16b+zWeeH4tQuOazxM6x1rfsZ+4x5p6oujNDZis24Xzmt9cfjWX2qMN5AT2piJwWes17qRFJ6Jh5U/VmvcsDX3YctXLhzxi6cgvYytktub7xLjXVh/40F5fi1H/dVYyyGcNvmZGio71rvzN264W+1jp7kX29e5SRMPtksTly2++OwMNuW20tiIzToPfB1CcbPcJ1f1kkY+2G304T/UcJQQbYNZbgAAAABJRU5ErkJggg==&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;android_widget&quot;
         title=&quot;&quot;
-        src=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/e8c3d/android_widget.png&quot;
-        srcset=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/17006/android_widget.png 175w,
-/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/e8c3d/android_widget.png 346w&quot;
+        src=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/8f77f/android_widget.png&quot;
+        srcset=&quot;/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/4edbd/android_widget.png 175w,
+/static/e9e73577e9a8e2aaa4f0b1e1eab4f702/8f77f/android_widget.png 346w&quot;
         sizes=&quot;(max-width: 346px) 100vw, 346px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1759,7 +1953,7 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/661067bfd7d5360baed870f1284e362d/e8c3d/android_notification.png&quot;
+    href=&quot;/static/661067bfd7d5360baed870f1284e362d/8f77f/android_notification.png&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1771,16 +1965,16 @@ Firebase Cloud Messaging&lt;/a&gt; and display them as notifications. Because th
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 177.74566473988438%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,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&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 177.7142857142857%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,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&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;android_notification&quot;
         title=&quot;&quot;
-        src=&quot;/static/661067bfd7d5360baed870f1284e362d/e8c3d/android_notification.png&quot;
-        srcset=&quot;/static/661067bfd7d5360baed870f1284e362d/17006/android_notification.png 175w,
-/static/661067bfd7d5360baed870f1284e362d/e8c3d/android_notification.png 346w&quot;
+        src=&quot;/static/661067bfd7d5360baed870f1284e362d/8f77f/android_notification.png&quot;
+        srcset=&quot;/static/661067bfd7d5360baed870f1284e362d/4edbd/android_notification.png 175w,
+/static/661067bfd7d5360baed870f1284e362d/8f77f/android_notification.png 346w&quot;
         sizes=&quot;(max-width: 346px) 100vw, 346px&quot;
       /&gt;
     &lt;/span&gt;
@@ -1908,7 +2102,7 @@ Success&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;
   &lt;a
     class=&quot;gatsby-resp-image-link&quot;
-    href=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/f007b/bluetooth-scanner-witing.jpg&quot;
+    href=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/aeb8d/bluetooth-scanner-witing.jpg&quot;
     style=&quot;display: block&quot;
     target=&quot;_blank&quot;
     rel=&quot;noopener&quot;
@@ -1920,17 +2114,17 @@ Success&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
   &gt;
     &lt;span
       class=&quot;gatsby-resp-image-background-image&quot;
-      style=&quot;padding-bottom: 105.3763440860215%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAVABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUDAgT/xAAWAQEBAQAAAAAAAAAAAAAAAAABAgD/2gAMAwEAAhADEAAAAbnm1mhWZncxiZtBr//EAB4QAAEEAQUAAAAAAAAAAAAAAAMBAhESABMUMTIz/9oACAEBAAEFAn9ZWWcGfQe7TAuuwyXHopIPP//EABcRAQEBAQAAAAAAAAAAAAAAAAEAEBH/2gAIAQMBAT8B6GJF/8QAFxEAAwEAAAAAAAAAAAAAAAAAAAEQEf/aAAgBAgEBPwHYxH//xAAZEAADAQEBAAAAAAAAAAAAAAAAARExEDL/2gAIAQEABj8CN43KeCpQaw3n/8QAHBABAAMAAgMAAAAAAAAAAAAAAQARIUFRcYGR/9oACAEBAAE/IVTZ3H2a3AZ6KlbpPcE6jqb7wbl2lab5hA0UXP/aAAwDAQACAAMAAAAQI9dC/8QAGBEBAQEBAQAAAAAAAAAAAAAAAQAhMRH/2gAIAQMBAT8Qexh92JduC//EABgRAQEAAwAAAAAAAAAAAAAAAAEAESEx/9oACAECAQE/EEDuHMRbi//EAB0QAQEBAQABBQAAAAAAAAAAAAERACExQWGRscH/2gAIAQEAAT8QUpiGE9ynlkipWvnJ2JI+qsMq3BRIo/G60CdX83c6oAsjgZQpU88dw52HKv3v/9k=&apos;); background-size: cover; display: block;&quot;
+      style=&quot;padding-bottom: 105.14285714285714%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/jpeg;base64,/9j/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wgARCAAVABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUDAgT/xAAWAQEBAQAAAAAAAAAAAAAAAAABAgD/2gAMAwEAAhADEAAAAbnm1mhWZncxiZtBr//EAB4QAAEEAQUAAAAAAAAAAAAAAAMBAhESABMUMTIz/9oACAEBAAEFAn9ZWWcGfQe7TAuuwyXHopIPP//EABcRAQEBAQAAAAAAAAAAAAAAAAEAEBH/2gAIAQMBAT8B6GJF/8QAFxEAAwEAAAAAAAAAAAAAAAAAAAEQEf/aAAgBAgEBPwHYxH//xAAZEAADAQEBAAAAAAAAAAAAAAAAARExEDL/2gAIAQEABj8CN43KeCpQaw3n/8QAHBABAAMAAgMAAAAAAAAAAAAAAQARIUFRcYGR/9oACAEBAAE/IVTZ3H2a3AZ6KlbpPcE6jqb7wbl2lab5hA0UXP/aAAwDAQACAAMAAAAQI9dC/8QAGBEBAQEBAQAAAAAAAAAAAAAAAQAhMRH/2gAIAQMBAT8Qexh92JduC//EABgRAQEAAwAAAAAAAAAAAAAAAAEAESEx/9oACAECAQE/EEDuHMRbi//EAB0QAQEBAQABBQAAAAAAAAAAAAERACExQWGRscH/2gAIAQEAAT8QUpiGE9ynlkipWvnJ2JI+qsMq3BRIo/G60CdX83c6oAsjgZQpU88dw52HKv3v/9k=&apos;); background-size: cover; display: block;&quot;
     &gt;
       &lt;img
         class=&quot;gatsby-resp-image-image&quot;
         style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
         alt=&quot;Posts per blog&quot;
         title=&quot;&quot;
-        src=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/f007b/bluetooth-scanner-witing.jpg&quot;
-        srcset=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/8dc06/bluetooth-scanner-witing.jpg 175w,
-/static/3b3ae090a9f39281fe6e6b20af8d57c1/f4417/bluetooth-scanner-witing.jpg 350w,
-/static/3b3ae090a9f39281fe6e6b20af8d57c1/f007b/bluetooth-scanner-witing.jpg 651w&quot;
+        src=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/aeb8d/bluetooth-scanner-witing.jpg&quot;
+        srcset=&quot;/static/3b3ae090a9f39281fe6e6b20af8d57c1/e52aa/bluetooth-scanner-witing.jpg 175w,
+/static/3b3ae090a9f39281fe6e6b20af8d57c1/70ebb/bluetooth-scanner-witing.jpg 350w,
+/static/3b3ae090a9f39281fe6e6b20af8d57c1/aeb8d/bluetooth-scanner-witing.jpg 651w&quot;
         sizes=&quot;(max-width: 651px) 100vw, 651px&quot;
       /&gt;
     &lt;/span&gt;

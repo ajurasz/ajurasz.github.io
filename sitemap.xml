@@ -3,6 +3,8 @@
 <url> <loc>https://ajurasz.github.io/</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>https://ajurasz.github.io/2</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>https://ajurasz.github.io/3</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
+<url> <loc>https://ajurasz.github.io/4</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
+<url> <loc>https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>https://ajurasz.github.io/2020-11-17-manage-schema-evolution-in-the-serverless-stack/</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>https://ajurasz.github.io/2020-04-12-continuous-deployment-on-kubernetes/</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
 <url> <loc>https://ajurasz.github.io/2019-12-28-accessing-request-data-from-outside-of-calling-thread/</loc> <changefreq>daily</changefreq> <priority>0.7</priority> </url>
