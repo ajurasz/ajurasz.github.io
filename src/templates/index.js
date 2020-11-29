@@ -12,8 +12,8 @@ import Summary from '../components/Summary';
 
 const IndexPage = ({ pageContext }) => {
   const { group, index, pageCount } = pageContext;
-  const previousUrl = index - 1 === 1 ? '' : (index - 1).toString();
-  const nextUrl = (index + 1).toString();
+  const previousUrl = index - 1 === 1 ? '/' : `/${(index - 1).toString()}`;
+  const nextUrl = `/${(index + 1).toString()}`;
   return (
     <Layout>
       <Container>
