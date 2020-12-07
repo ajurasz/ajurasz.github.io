@@ -1,4 +1,225 @@
-<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Sun, 29 Nov 2020 11:59:28 GMT</lastBuildDate><item><title><![CDATA[AWS Lambda custom runtime]]></title><description><![CDATA[AWS Lambda support many build in runtimes. But we also have a possibility to create custom runtimes to run functions in a language that is…]]></description><link>https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</guid><pubDate>Mon, 23 Nov 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;AWS Lambda support many &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html&quot;&gt;build in runtimes&lt;/a&gt;. But we also have a possibility to create custom runtimes to run functions in a language that is not yet supported by Lambda service or when we need to do some extra optimization (i.e. reduce startup time or memory footprint of functions build for JVM). Today we will learn how to build a very simple runtime focusing mainly on steps required to do so.&lt;/p&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dev Blog]]></title><description><![CDATA[Software Engineer]]></description><link>https://ajurasz.github.io</link><generator>GatsbyJS</generator><lastBuildDate>Mon, 07 Dec 2020 21:29:42 GMT</lastBuildDate><item><title><![CDATA[Use JDK Flight Recorder to log SQL queries]]></title><description><![CDATA[Since Java 11,  () is getting more and more popular among developers. There are two reasons behind this fact, first,  got open-sourced and…]]></description><link>https://ajurasz.github.io/2020-12-07-use-jdk-flight-recorder-to-log-sql-queries/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-12-07-use-jdk-flight-recorder-to-log-sql-queries/</guid><pubDate>Mon, 07 Dec 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;Since Java 11, &lt;code class=&quot;language-text&quot;&gt;JDK Flight Recorder&lt;/code&gt; (&lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt;) is getting more and more popular among developers. There are two reasons behind this fact, first, &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; got open-sourced and included into OpenJDK - previously it was part of a &lt;code class=&quot;language-text&quot;&gt;JRockit JVM&lt;/code&gt; and commercial version of Oracle JDK (see &lt;a href=&quot;http://openjdk.java.net/jeps/328&quot;&gt;JEP 328&lt;/a&gt; for more details.). The second fact is that it is a tool for collecting diagnostic and profiling data about running Java application - because it is so deeply embedded to JVM it provides extremely low overhead (about 1% out of the box).&lt;/p&gt;
+&lt;!-- end --&gt;
+&lt;h2&gt;Low overhead&lt;/h2&gt;
+&lt;p&gt;To get a very good and affordable explanation on how JVM engineers managed to achieve so great results, please watch part of the following video where Mikael Vidstedt explains this.&lt;/p&gt;
+&lt;div class=&quot;gatsby-resp-iframe-wrapper&quot; style=&quot;padding-bottom: 56.25%; position: relative; height: 0; overflow: hidden; margin-bottom: 1.0725rem&quot; &gt; &lt;iframe src=&quot;https://www.youtube.com/embed/plYESjZ12hM?t=1&quot; frameborder=&quot;0&quot; allow=&quot;accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture&quot; allowfullscreen style=&quot; position: absolute; top: 0; left: 0; width: 100%; height: 100%; &quot;&gt;&lt;/iframe&gt; &lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;I encourage you to watch the full presentation as it is very enlightening in terms of &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; topic.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;JFR&lt;/h2&gt;
+&lt;p&gt;If videos are not your thing and you prefer to read then I recommend following blog posts from &lt;code class=&quot;language-text&quot;&gt;redhat&lt;/code&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://developers.redhat.com/blog/2020/08/25/get-started-with-jdk-flight-recorder-in-openjdk-8u/&quot;&gt;Get started with JDK Flight Recorder in OpenJDK 8u&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://developers.redhat.com/blog/2020/10/29/collect-jdk-flight-recorder-events-at-runtime-with-jmc-agent/&quot;&gt;Collect JDK Flight Recorder events at runtime with JMC Agent&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Motivation&lt;/h2&gt;
+&lt;p&gt;I got inspired by Gunnar Morling and his tweet&lt;/p&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot; align=&quot;center&quot; data-dnt=&quot;true&quot;&gt;&lt;p lang=&quot;en&quot; dir=&quot;ltr&quot;&gt;🧑‍💻: &amp;quot;If we only could log SQL statements executed by &lt;a href=&quot;https://twitter.com/Hibernate?ref_src=twsrc%5Etfw&quot;&gt;@Hibernate&lt;/a&gt; with Flight Recorder.&amp;quot;&lt;br&gt;&lt;br&gt;JMC Agent: &amp;quot;Hold my 🍷!&amp;quot; &lt;a href=&quot;https://t.co/f5S5hSf5Tj&quot;&gt;pic.twitter.com/f5S5hSf5Tj&lt;/a&gt;&lt;/p&gt;&amp;mdash; Gunnar Morling 🌍 (@gunnarmorling) &lt;a href=&quot;https://twitter.com/gunnarmorling/status/1317552923950391301?ref_src=twsrc%5Etfw&quot;&gt;October 17, 2020&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;p&gt;Although it’s not visible on the Gunnar’s screen if he logs SQL statements together with parameters I thought it would be a great exercise to see if I could do the similar thing using &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; and have full SQL statements that can be copy-pasted to an SQL editor.&lt;/p&gt;
+&lt;h2&gt;Datasource proxy&lt;/h2&gt;
+&lt;p&gt;First, to be able to get access to SQL statements and parameters passed to JDBC it would be required to intercept appropriate methods from JDBC API through a proxy around &lt;code class=&quot;language-text&quot;&gt;java.sql.Statement&lt;/code&gt;. To make things easier and focus mostly on creating &lt;code class=&quot;language-text&quot;&gt;jdk.jfr.Event&lt;/code&gt;s we will use &lt;a href=&quot;https://github.com/ttddyy/datasource-proxy&quot;&gt;datasource-proxy&lt;/a&gt; - library which gives easy access to what is needed.&lt;/p&gt;
+&lt;p&gt;Let’s start wit creating &lt;code class=&quot;language-text&quot;&gt;javax.sql.DataSource&lt;/code&gt; and tell HIbernate to use it.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;kotlin&quot;&gt;&lt;pre class=&quot;language-kotlin&quot;&gt;&lt;code class=&quot;language-kotlin&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;object&lt;/span&gt; DB &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;val&lt;/span&gt; sessionFactory&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; SessionFactory
+
+    &lt;span class=&quot;token keyword&quot;&gt;init&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;val&lt;/span&gt; registry &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;StandardServiceRegistryBuilder&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;configure&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;applySettings&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;runtimeSettings&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+        sessionFactory &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;MetadataSources&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;registry&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;addAnnotatedClass&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;Post&lt;span class=&quot;token operator&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;java&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;buildMetadata&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;buildSessionFactory&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;runtimeSettings&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; MutableMap&lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;String&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; Any&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;mutableMapOf&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+                Environment&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;DATASOURCE &lt;span class=&quot;token keyword&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;dataSourceProxy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;dataSourceProxy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; ProxyDataSourceBuilder&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;dataSource&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;listener&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;QueryRecorder&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;dataSource&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;MysqlDataSource&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;also&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;setURL&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;dbUrl&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;user &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;dbUser&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;password &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;dbPassword&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token comment&quot;&gt;// rest of the code omitted for better readability    &lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Hibernate is used only to make this example more interesting. It would be possible to use raw JDBC API and work directly with &lt;code class=&quot;language-text&quot;&gt;java.sql.Connection&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;java.sql.PreparedStatement&lt;/code&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Notice that &lt;code class=&quot;language-text&quot;&gt;ProxyDataSourceBuilder&lt;/code&gt; register &lt;code class=&quot;language-text&quot;&gt;QueryRecorder&lt;/code&gt; listener that will be executed after a call to one of the following methods &lt;code class=&quot;language-text&quot;&gt;executeQuery, executeUpdate, execute, executeLargeUpdate&lt;/code&gt; from &lt;code class=&quot;language-text&quot;&gt;java.sql.Statement&lt;/code&gt;. &lt;code class=&quot;language-text&quot;&gt;QueryRecorder#afterQuery&lt;/code&gt; is responsible for parsing provided arguments through the &lt;code class=&quot;language-text&quot;&gt;Query&lt;/code&gt; object and then commit &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; events.&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;kotlin&quot;&gt;&lt;pre class=&quot;language-kotlin&quot;&gt;&lt;code class=&quot;language-kotlin&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; QueryRecorder &lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; QueryExecutionListener &lt;span class=&quot;token keyword&quot;&gt;by&lt;/span&gt; QueryExecutionListener&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;DEFAULT&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;afterQuery&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;execInfo&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; ExecutionInfo&lt;span class=&quot;token operator&quot;&gt;?&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; queryInfoList&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; MutableList&lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;QueryInfo&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;token function&quot;&gt;resolveQuery&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;queryInfoList&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;forEach&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;::&lt;/span&gt;publishEvent&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;resolveQuery&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;queryInfoList&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; MutableList&lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;QueryInfo&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; queryInfoList
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;flatMap&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;parametersList&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; params &lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;Pair&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;it&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;query&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; params&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+            &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;query&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; params&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&gt;&lt;/span&gt; Query&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;query&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; params&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;publishEvent&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;query&lt;span class=&quot;token operator&quot;&gt;:&lt;/span&gt; Query&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;QueryEvent&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;query&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;toSql&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;commit&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Collecting JFR events&lt;/h2&gt;
+&lt;p&gt;There are three ways to “record flights”.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;JDK Mission Control (JMC)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;The main purpose of this tool is to analyze &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; recordings through a graphical interface. Beside displaying these data it can interact with &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; to start recordings. Assuming there is a running Java application supporting &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt;, then we can select process under which this application runs and start recording as shown below.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/940e4190af458a27a356c75ceee8677e/e0202/jmc_1.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 61.142857142857146%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAMCAYAAABiDJ37AAAACXBIWXMAAC4jAAAuIwF4pT92AAAB+klEQVQoz6WS22sTQRTG9+8WCoLgpTYgNvdoW4oVq29aLaJP6rukKGi21jQ2yc7eL7OXZLd8frObhGhFH1z2x5mdOXxzvnNWa9braGxvo05ajQa67XZJp9VCu9lAh+u93T3s7uyg2+nwm3R+pbuID3s9aGmSwJcx5CxHVlzif558PodmnX3F6P0xTl4+xcnRIfrPn6D/QnGIz6+eQf/wFsPhEMOzbzjVB1c4O9VhiymiKITvedDmicRY/4LN6xu4tXEN927eQKu2iebWHTTv3saD+n08PjjAo/199GhrSXdhsVbbwrs3r1EUOcLAhzabzSCTFC7VXT9AKCUitiGKE65jxhgqZ047eZ6vKIqitDm1bIwuxkhZWBQGFMwyhFyMJz/gOTYsy4LrukgomiQxYgpKXvI76jxNU1qN4DE/lhEFQ2hZxk0mjC7O8Z19UoIZL1ln9geqs7SMVwRVFQ6FhDGF5Drm7Sr+i2We6zoLwUAJZuWEjOkEtl1ZVjEMIxL+FZU3ZRGWZa4LVn0whQHHceB5bjn+Jd4K7vs+giDggKohXeYcDN+Qw5QsSsEpZ0wKadeAS0G7rNCqIm9We3Esywrkok9qiJIOhCfwcdLHSJwjpfWqwjQpLQsh4KyE1jFhmaLEZI5BixO2xzQEBqMBjj4dQx/ryNRvRsGfbQVq9y+BlR4AAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;JMC Start Recording&quot;
+        title=&quot;&quot;
+        src=&quot;/static/940e4190af458a27a356c75ceee8677e/8c557/jmc_1.png&quot;
+        srcset=&quot;/static/940e4190af458a27a356c75ceee8677e/4edbd/jmc_1.png 175w,
+/static/940e4190af458a27a356c75ceee8677e/13ae7/jmc_1.png 350w,
+/static/940e4190af458a27a356c75ceee8677e/8c557/jmc_1.png 700w,
+/static/940e4190af458a27a356c75ceee8677e/e996b/jmc_1.png 1050w,
+/static/940e4190af458a27a356c75ceee8677e/e0202/jmc_1.png 1395w&quot;
+        sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;p&gt;There are two important things to be aware of while configuring recording (this applies to other two ways as well). First is that there are two types of recordings &lt;code class=&quot;language-text&quot;&gt;Time fixed&lt;/code&gt; where we define the time of recording and &lt;code class=&quot;language-text&quot;&gt;Continuous&lt;/code&gt; where we define the maximum size and age of these recordings. &lt;code class=&quot;language-text&quot;&gt;Time fixed&lt;/code&gt; is very nice to sample your Java application once for a given time and then when recording is finished &lt;code class=&quot;language-text&quot;&gt;JMC&lt;/code&gt; will automatically load and display collected data - for &lt;code class=&quot;language-text&quot;&gt;Continuous&lt;/code&gt; type you would have to manually dump recordings to a file and then load them in &lt;code class=&quot;language-text&quot;&gt;JMC&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;
+  &lt;a
+    class=&quot;gatsby-resp-image-link&quot;
+    href=&quot;/static/a800e86e0f352147257682043e0a76fd/82f50/jmc_2.png&quot;
+    style=&quot;display: block&quot;
+    target=&quot;_blank&quot;
+    rel=&quot;noopener&quot;
+  &gt;
+  
+  &lt;span
+    class=&quot;gatsby-resp-image-wrapper&quot;
+    style=&quot;position: relative; display: block; margin: 15px -30px !important max-width: 700px; margin-left: auto; margin-right: auto;&quot;
+  &gt;
+    &lt;span
+      class=&quot;gatsby-resp-image-background-image&quot;
+      style=&quot;padding-bottom: 51.42857142857144%; position: relative; bottom: 0; left: 0; background-image: url(&apos;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAKCAYAAAC0VX7mAAAACXBIWXMAAC4jAAAuIwF4pT92AAAB60lEQVQoz11SWW7bQAzV/Q9Qp6mX2jKSK+QA7U83tEWMNtW+ebRZtjbLWqxXcmwHRQd4IIcaPj6SUt5OJpi8meCO7Gw6xZRwf/8Os9kc8/lc2oeHR4nFYgF1pWKtqlAJ6/X6AnWF5XKJx9V7KG1ToywLHI9H8MkPOfIsQ991aNuObA+MI8bziP9PR9/6/oxx6GX+qRug5IcMuvZCgQZDPyDwHGx9j4j3CCwDgalDOCb5OkLXhiCEVwjHwtY2kYUCeRKRkBQKMzuui6ZpZNX0+RPCj08YXr5SsgMv2CJJU9iOg3S3gx8EMC1L5rieB8u2UdX1VXEHhdv9o2nY7/cyKHwTm2+fkacJxDaARclRFELXdcRRBI+I2DdNE6ZhQKPc+krIY1KqqoRhaNTiQQazQwzdMhEfSggRwiFlcRxLAra+79N7Q965GPsRFWJBzKFU1LLhuCiaVhImwpMKmtMJAbV3IYxeCTlmkH8jvRHrdA+FoJZjauvLB6S/vuOc+MgoaFs2TrRhfnBpOZIETOjR3F4VErh4VVVSTNu2tJSQFqL9QG/8xOD8RrILsdk8wxMRttTyv4RsXZohz+2mTNN0FEVxXQoRtvSr8DkTRjnDXKooqxopbZdnxpZjO9qyINVMynEGb7ssy4tCGtNfFuzaGzOGL90AAAAASUVORK5CYII=&apos;); background-size: cover; display: block;&quot;
+    &gt;
+      &lt;img
+        class=&quot;gatsby-resp-image-image&quot;
+        style=&quot;width: 100%; height: 100%; margin: 0; vertical-align: middle; position: absolute; top: 0; left: 0; box-shadow: inset 0px 0px 0px 400px white;&quot;
+        alt=&quot;JMC Recording Results&quot;
+        title=&quot;&quot;
+        src=&quot;/static/a800e86e0f352147257682043e0a76fd/8c557/jmc_2.png&quot;
+        srcset=&quot;/static/a800e86e0f352147257682043e0a76fd/4edbd/jmc_2.png 175w,
+/static/a800e86e0f352147257682043e0a76fd/13ae7/jmc_2.png 350w,
+/static/a800e86e0f352147257682043e0a76fd/8c557/jmc_2.png 700w,
+/static/a800e86e0f352147257682043e0a76fd/e996b/jmc_2.png 1050w,
+/static/a800e86e0f352147257682043e0a76fd/2cefc/jmc_2.png 1400w,
+/static/a800e86e0f352147257682043e0a76fd/82f50/jmc_2.png 1635w&quot;
+        sizes=&quot;(max-width: 700px) 100vw, 700px&quot;
+      /&gt;
+    &lt;/span&gt;
+  &lt;/span&gt;
+  
+  &lt;/a&gt;
+    &lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;SQL statements provided by JFR Events&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;select next&lt;em&gt;val as id&lt;/em&gt;val from hibernate_sequence for update&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;update hibernate&lt;em&gt;sequence set next&lt;/em&gt;val= 6 where next_val=5&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;insert into Post (content, createDate, title, id) values (‘Some content 0dfbf216-4e93-46cd-8f2f-25999e7114bd’, ‘2020-12-342 22:12:75’, ‘Post #1’, 1)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;insert into Post (content, createDate, title, id) values (‘Some content e23c1061-95f4-4960-a484-90e3483165e7’, ‘2020-12-342 22:12:09’, ‘Post #2’, 2)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;insert into Post (content, createDate, title, id) values (‘Some content c102d6c3-a070-466f-9ff4-44cc69bb20d0’, ‘2020-12-342 22:12:14’, ‘Post #3’, 3)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;insert into Post (content, createDate, title, id) values (‘Some content 5c7c2083-68ec-4b1d-b911-95942facddb0’, ‘2020-12-342 22:12:19’, ‘Post #4’, 4)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;insert into Post (content, createDate, title, id) values (‘Some content a8118b5b-f3d4-4fa5-b796-01a33f79bab4’, ‘2020-12-342 22:12:23’, ‘Post #5’, 5)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The second important thing I mentioned that it is worth to notice is that we can define &lt;code class=&quot;language-text&quot;&gt;Event settings&lt;/code&gt; - file which allows customizing what events are record and how often. By default, OpenJDK 11 provides two setting files&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;jdk11
+  ├── bin
+  ├── conf
+  ├── demo
+  ├── include
+  ├── jmods
+  ├── legal
+  ├── lib
+  │   └── jfr
+  │       ├── default.jfc
+  │       └── profile.jfc
+  ├── &lt;span class=&quot;token function&quot;&gt;man&lt;/span&gt;
+  └── release&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;default.jfc&lt;/code&gt;&lt;/strong&gt; - “Low overhead configuration safe for continuous use in production environments, typically less than 1 % overhead.”&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code class=&quot;language-text&quot;&gt;profile.jfc&lt;/code&gt;&lt;/strong&gt; - “Low overhead configuration for profiling, typically around 2 % overhead.”&lt;/p&gt;
+&lt;p&gt;If we would like to ignore for instance &lt;code class=&quot;language-text&quot;&gt;QueryEvent&lt;/code&gt; from recordings we could disable it through &lt;code class=&quot;language-text&quot;&gt;jfc&lt;/code&gt; file like this:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;xml&quot;&gt;&lt;pre class=&quot;language-xml&quot;&gt;&lt;code class=&quot;language-xml&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;configuration&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
+  &lt;span class=&quot;token comment&quot;&gt;&amp;lt;!-- Rest of the file ommited for better readability --&gt;&lt;/span&gt;
+  &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;event&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;io.ajurasz.QueryEvent&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
+    &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;&lt;/span&gt;setting&lt;/span&gt; &lt;span class=&quot;token attr-name&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token attr-value&quot;&gt;&lt;span class=&quot;token punctuation attr-equals&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;enabled&lt;span class=&quot;token punctuation&quot;&gt;&quot;&lt;/span&gt;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;false&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;setting&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
+  &lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;event&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token tag&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;&amp;lt;/&lt;/span&gt;configuration&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;&gt;&lt;/span&gt;&lt;/span&gt;  &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;JVM&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;It is possible to enable recording at process startup using &lt;code class=&quot;language-text&quot;&gt;-XX:StartFlightRecording&lt;/code&gt; JVM option. Following command will dump recordings on exit to a file named &lt;code class=&quot;language-text&quot;&gt;sample.jfr&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;java -XX:StartFlightRecording&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;disk&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;true,dumponexit&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;true,filename&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;sample.jfr -jar target/hibernate-logging-1.0-SNAPSHOT-jar-with-dependencies.jar&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Above option is so nice that it additionally prints instruction in the console on how to dump recording to a file on demand (if we don’t want to wait until process exits):&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;➜  hibernate-jfr-logging git:&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;master&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; ✗ java -XX:StartFlightRecording&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;disk&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;true,dumponexit&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;true,filename&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;sample.jfr -jar target/hibernate-logging-1.0-SNAPSHOT-jar-with-dependencies.jar
+Started recording &lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;. No limit specified, using &lt;span class=&quot;token assign-left variable&quot;&gt;maxsize&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;250MB as default.
+
+Use jcmd &lt;span class=&quot;token number&quot;&gt;24288&lt;/span&gt; JFR.dump &lt;span class=&quot;token assign-left variable&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt; to copy recording data to file.
+Dec 07, &lt;span class=&quot;token number&quot;&gt;2020&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;9&lt;/span&gt;:26:23 PM org.hibernate.Version logVersion
+INFO: HHH000412: Hibernate ORM core version &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;WORKING&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+Dec 07, &lt;span class=&quot;token number&quot;&gt;2020&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;9&lt;/span&gt;:26:23 PM org.hibernate.annotations.common.reflection.java.JavaReflectionManager &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;clinit&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;
+INFO: HCANN000001: Hibernate Commons Annotations &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;5.1&lt;/span&gt;.0.Final&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+Dec 07, &lt;span class=&quot;token number&quot;&gt;2020&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;9&lt;/span&gt;:26:24 PM org.hibernate.dialect.Dialect &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt;init&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;..&lt;/span&gt;.&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;ol start=&quot;3&quot;&gt;
+&lt;li&gt;jcmd&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;jcmd&lt;/code&gt; utility is used to send diagnostic command requests to the JVM. Some of the commands are designed to control &lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; in a running process. Following commands shows how to start, dump and stop recording:&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;bash&quot;&gt;&lt;pre class=&quot;language-bash&quot;&gt;&lt;code class=&quot;language-bash&quot;&gt;➜  hibernate-jfr-logging git:&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;master&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; jcmd &lt;span class=&quot;token number&quot;&gt;25024&lt;/span&gt; JFR.start &lt;span class=&quot;token assign-left variable&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;MyRecording
+➜  hibernate-jfr-logging git:&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;master&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; jcmd &lt;span class=&quot;token number&quot;&gt;25024&lt;/span&gt; JFR.dump &lt;span class=&quot;token assign-left variable&quot;&gt;filename&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;sample.jfr
+➜  hibernate-jfr-logging git:&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;master&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; jcmd &lt;span class=&quot;token number&quot;&gt;25024&lt;/span&gt; JFR.stop &lt;span class=&quot;token assign-left variable&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;MyRecording&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;JFR&lt;/code&gt; looks to be a great tool for troubleshooting errors occurring on production, especially that it does not require to restart already running application.&lt;/p&gt;
+&lt;p&gt;Source code of the sample application that logs full SQL statements can be found on &lt;a href=&quot;https://github.com/ajurasz/hibernate-jfr-logging&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;</content:encoded></item><item><title><![CDATA[AWS Lambda custom runtime]]></title><description><![CDATA[AWS Lambda support many build in runtimes. But we also have a possibility to create custom runtimes to run functions in a language that is…]]></description><link>https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</link><guid isPermaLink="false">https://ajurasz.github.io/2020-11-23-aws-lambda-custom-runtime/</guid><pubDate>Mon, 23 Nov 2020 00:00:00 GMT</pubDate><content:encoded>&lt;p&gt;AWS Lambda support many &lt;a href=&quot;https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html&quot;&gt;build in runtimes&lt;/a&gt;. But we also have a possibility to create custom runtimes to run functions in a language that is not yet supported by Lambda service or when we need to do some extra optimization (i.e. reduce startup time or memory footprint of functions build for JVM). Today we will learn how to build a very simple runtime focusing mainly on steps required to do so.&lt;/p&gt;
 &lt;!-- end --&gt;
 &lt;h2&gt;Custom runtime&lt;/h2&gt;
 &lt;p&gt;Every runtime is executed on Amazon Linux or Amazon Linux 2 operating system. In case of JVM, functions need at least a Java Runtime Environment (JRE) to run a &lt;code class=&quot;language-text&quot;&gt;jar&lt;/code&gt; but it won’t be available out of the box on mentioned systems. Thankfully starting from Java 9 a &lt;code class=&quot;language-text&quot;&gt;jlink&lt;/code&gt; tool was introduced which creates a customized JRE that contains only these modules that are required by your own module - this way JRE can be part of the deployment package.&lt;/p&gt;
