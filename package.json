@@ -2,6 +2,7 @@
   "name": "blog",
   "version": "2.0.0",
   "dependencies": {
+    "@weknow/gatsby-remark-twitter": "^0.2.3",
     "gatsby": "^2.0.31",
     "gatsby-image": "^1.0.55",
     "gatsby-paginate": "^1.0.16",
